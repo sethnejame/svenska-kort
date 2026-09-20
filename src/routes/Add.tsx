@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router';
 import type { PartOfSpeech, WordEntry, WordForms } from '../types/word';
@@ -6,6 +6,8 @@ import { asWordEntry, wordEntrySchema } from '../data/schema';
 import { ALL_ENTRIES } from '../data/decks';
 import { useDeckStore } from '../store/useDeckStore';
 import { entryId } from '../lib/entryId';
+import type { ParsedLine } from '../lib/parseBulk';
+import { parseBulk } from '../lib/parseBulk';
 import { suggestNounForms, suggestVerbForms } from '../lib/swedishMorphology';
 import { cx } from '../utils/cx';
 import styles from './Add.module.css';
@@ -130,6 +132,7 @@ export function Add() {
 
   const userEntries = useDeckStore((s) => s.userEntries);
   const addEntry = useDeckStore((s) => s.addEntry);
+  const addEntries = useDeckStore((s) => s.addEntries);
 
   const [swedish, setSwedish] = useState('');
   const [lemma, setLemma] = useState('');
@@ -149,6 +152,12 @@ export function Add() {
   const [suggested, setSuggested] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<string | null>(null);
+
+  const [paste, setPaste] = useState('');
+  const [imported, setImported] = useState<string | null>(null);
+  // Cheap enough to re-run on every keystroke, and it keeps the preview honest.
+  const rows = useMemo(() => parseBulk(paste), [paste]);
+  const ready = rows.filter((row) => row.ok);
 
   // Mirrors `suggested` for the autofill effect, which must not re-run just
   // because the chip appeared or went away.
@@ -267,6 +276,9 @@ export function Add() {
     mark(false);
   };
 
+  const takenIds = () =>
+    new Set([...ALL_ENTRIES.map((entry) => entry.id), ...userEntries.map((entry) => entry.id)]);
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
@@ -283,10 +295,7 @@ export function Add() {
     }
 
     const lemmaTrimmed = lemma.trim();
-    const taken = new Set([
-      ...ALL_ENTRIES.map((entry) => entry.id),
-      ...userEntries.map((entry) => entry.id),
-    ]);
+    const taken = takenIds();
     const forms = buildForms(pos, noun, verb, adjective);
 
     const candidate = {
@@ -316,6 +325,74 @@ export function Add() {
     setErrors({});
     setSaved(entry.swedish);
     reset();
+  };
+
+  /** Moves one parsed row onto the single-entry form so it can be corrected. */
+  const editRow = (row: ParsedLine) => {
+    const draft = row.entry ?? {};
+    const nextPos = draft.pos ?? 'other';
+
+    reset();
+    setSwedish(draft.swedish ?? '');
+    setEnglish(draft.english ?? []);
+    setPos(nextPos);
+    setNote(draft.note ?? '');
+
+    const forms = draft.forms;
+    if (forms?.kind === 'noun') {
+      setNoun({
+        gender: forms.gender,
+        indefSg: forms.indefSg,
+        defSg: forms.defSg,
+        indefPl: forms.indefPl,
+        defPl: forms.defPl,
+      });
+    } else if (forms?.kind === 'verb') {
+      setVerb({
+        infinitive: forms.infinitive,
+        present: forms.present,
+        past: forms.past,
+        supine: forms.supine,
+        imperative: forms.imperative ?? '',
+        group: forms.group === undefined ? '' : (String(forms.group) as VerbGroup),
+      });
+    }
+
+    // The line leaves the paste box, so correcting it cannot also import it.
+    setPaste((current) =>
+      current
+        .split(/\r?\n/)
+        .filter((_, index) => index + 1 !== row.lineNumber)
+        .join('\n'),
+    );
+    setErrors({});
+    setSaved(null);
+    setTab('single');
+  };
+
+  const handleImport = () => {
+    const taken = takenIds();
+    const entries: WordEntry[] = [];
+
+    for (const row of ready) {
+      const draft = row.entry;
+      if (draft === undefined) continue;
+
+      const candidate = {
+        ...draft,
+        id: entryId(draft.lemma ?? draft.swedish ?? '', draft.pos ?? 'other', taken),
+      };
+      const parsed = wordEntrySchema.safeParse(candidate);
+      if (!parsed.success) continue;
+
+      // Added to the taken set as we go, or two identical lines would collide.
+      taken.add(candidate.id);
+      entries.push(asWordEntry(parsed.data));
+    }
+
+    addEntries(entries);
+    setImported(`${entries.length} ord sparade.`);
+    setPaste('');
   };
 
   const formsError = errors['form'];
@@ -359,9 +436,120 @@ export function Add() {
       </div>
 
       {tab === 'bulk' ? (
-        <p className={styles.placeholder} lang="sv">
-          Kommer snart.
-        </p>
+        <div className={styles.bulk}>
+          {imported !== null && (
+            <p className={styles.saved} role="status" lang="sv">
+              {imported}
+            </p>
+          )}
+
+          <label className={styles.field}>
+            <span className={styles.label} lang="sv">
+              Ett ord per rad: svenska - engelska
+            </span>
+            <textarea
+              className={styles.textarea}
+              value={paste}
+              onChange={(event) => {
+                setPaste(event.target.value);
+                setImported(null);
+              }}
+              rows={8}
+              spellCheck={false}
+              autoCapitalize="none"
+              lang="sv"
+            />
+          </label>
+
+          <p className={styles.hint} lang="sv">
+            {'# börjar en anteckning. @verb a/b/c/d fyller böjningen. '}
+            {'Citattecken gör raden till en fras.'}
+          </p>
+
+          {rows.length > 0 && (
+            <>
+              <p className={styles.count} role="status" lang="sv">
+                {`${ready.length} klara, ${rows.length - ready.length} behöver ses över`}
+              </p>
+
+              {/* The scroll lives on the table, never on the page. */}
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th scope="col" lang="sv">
+                        Rad
+                      </th>
+                      <th scope="col" lang="sv">
+                        Svenska
+                      </th>
+                      <th scope="col" lang="sv">
+                        Engelska
+                      </th>
+                      <th scope="col" lang="sv">
+                        Ordklass
+                      </th>
+                      <th scope="col">
+                        <span className={styles.srOnly} lang="sv">
+                          Åtgärd
+                        </span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <tr
+                        key={row.lineNumber}
+                        className={row.ok ? undefined : styles.badRow}
+                        data-ok={row.ok}
+                      >
+                        <td>{row.lineNumber}</td>
+                        <td lang="sv">{row.ok ? row.entry?.swedish : row.raw.trim()}</td>
+                        <td>
+                          {row.ok ? (
+                            row.entry?.english?.join(', ')
+                          ) : (
+                            <span className={styles.rowError} lang="sv">
+                              {row.error}
+                            </span>
+                          )}
+                        </td>
+                        <td lang="sv">
+                          {row.ok && row.entry?.pos !== undefined ? POS_LABELS[row.entry.pos] : '—'}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className={styles.rowAction}
+                            onClick={() => {
+                              editRow(row);
+                            }}
+                            lang="sv"
+                            // Twelve buttons all reading "Ändra" tell a screen
+                            // reader nothing; the row number is the difference.
+                            aria-label={`Ändra rad ${row.lineNumber}`}
+                          >
+                            Ändra
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <button
+                type="button"
+                className={styles.submit}
+                onClick={handleImport}
+                disabled={ready.length === 0}
+                lang="sv"
+              >
+                {`Importera ${ready.length} ord`}
+              </button>
+            </>
+          )}
+        </div>
       ) : (
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {saved !== null && (

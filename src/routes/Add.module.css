@@ -58,9 +58,101 @@
   box-shadow: var(--shadow-card);
 }
 
-.placeholder {
+.bulk {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  /* 16px or larger, or iOS zooms the page when the field takes focus. */
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.hint {
   margin: 0;
+  font-size: 0.8125rem;
   color: var(--c-ink-soft);
+}
+
+.count {
+  margin: 0;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+/* Wide tables scroll inside this box so the page itself never does. */
+.tableScroll {
+  /* Containing block for `.srOnly`, which would otherwise be placed against
+     the document and drag the page sideways with it. */
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.table th,
+.table td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+.table th {
+  color: var(--c-ink-soft);
+  font-weight: 600;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.badRow {
+  background: var(--c-chip);
+}
+
+.badRow td:first-child {
+  box-shadow: inset 3px 0 0 var(--c-wrong);
+}
+
+.rowError {
+  color: var(--c-wrong);
+}
+
+.rowAction {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-pill);
+  background: var(--c-card);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .form {

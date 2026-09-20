@@ -18,6 +18,7 @@ export interface DeckState {
 
 export interface DeckActions {
   addEntry: (entry: WordEntry) => void;
+  addEntries: (entries: readonly WordEntry[]) => void;
   selectDeck: (deckId: string) => void;
 }
 
@@ -38,6 +39,13 @@ export const useDeckStore = create<DeckState & DeckActions>()(
         // The caller deduped the id against everything already known, so an
         // append is safe and keeps the newest word last in the deck.
         set((state) => ({ userEntries: [...state.userEntries, entry] }));
+      },
+
+      addEntries: (entries) => {
+        // One write for a whole paste: 200 separate ones would mean 200 trips
+        // through the persist middleware.
+        if (entries.length === 0) return;
+        set((state) => ({ userEntries: [...state.userEntries, ...entries] }));
       },
 
       selectDeck: (deckId) => {

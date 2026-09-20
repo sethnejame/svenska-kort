@@ -1,11 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { INITIAL_DECK_STATE, useDeckStore } from '../store/useDeckStore';
 import { INITIAL_GAME_STATE, useGameStore } from '../store/useGameStore';
 import { entriesForDeck } from '../data/decks';
 import { Add } from './Add';
+
+const SAMPLE = `förberedd - prepared
+antal / antalet - number / the number
+gillar - likes, like        # note: easier than "tycker om"
+minskade - decreased        @verb minska/minskar/minskade/minskat
+"fast jag tycker" - although I think`;
 
 function renderAdd() {
   const router = createMemoryRouter(
@@ -16,6 +22,16 @@ function renderAdd() {
     { initialEntries: ['/add'] },
   );
   return render(<RouterProvider router={router} />);
+}
+
+/**
+ * `user.type` costs a keystroke per character, which a 200-line paste cannot
+ * afford, and a paste is one change event anyway.
+ */
+function paste(text: string) {
+  fireEvent.change(screen.getByRole('textbox', { name: /Ett ord per rad/ }), {
+    target: { value: text },
+  });
 }
 
 async function fillMinimum(user: ReturnType<typeof userEvent.setup>, swedish: string) {
@@ -35,12 +51,13 @@ describe('Add', () => {
     expect(screen.getByLabelText('Svenska')).toBeInTheDocument();
   });
 
-  it('holds the bulk tab back for now', async () => {
+  it('shows an empty paste box on the bulk tab', async () => {
     const user = userEvent.setup();
     renderAdd();
 
     await user.click(screen.getByRole('tab', { name: 'Klistra in lista' }));
-    expect(screen.getByText('Kommer snart.')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /Ett ord per rad/ })).toHaveValue('');
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
   it('saves a word and reports it', async () => {
@@ -224,6 +241,89 @@ describe('Add', () => {
     expect(screen.getByLabelText('Svenska')).toHaveValue('');
     expect(screen.getByLabelText('Engelska')).toHaveValue('');
     expect(screen.queryByRole('button', { name: /^thing/ })).not.toBeInTheDocument();
+  });
+
+  it('previews every pasted line, sound or not, and imports only the sound ones', async () => {
+    const user = userEvent.setup();
+    renderAdd();
+
+    await user.click(screen.getByRole('tab', { name: 'Klistra in lista' }));
+    paste(`${SAMPLE}\nförmål objects`);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(6);
+    expect(screen.getByText('5 klara, 1 behöver ses över')).toBeInTheDocument();
+    expect(screen.getByText("no ' - ' separator found")).toBeInTheDocument();
+
+    // Nothing is written until the learner asks for it.
+    expect(useDeckStore.getState().userEntries).toEqual([]);
+
+    await user.click(screen.getByRole('button', { name: 'Importera 5 ord' }));
+
+    const saved = useDeckStore.getState().userEntries;
+    expect(saved).toHaveLength(5);
+    expect(saved.map((entry) => entry.swedish)).toEqual([
+      'förberedd',
+      'antal / antalet',
+      'gillar',
+      'minskade',
+      'fast jag tycker',
+    ]);
+    expect(screen.getByRole('status')).toHaveTextContent('5 ord sparade.');
+  });
+
+  it('empties the paste box once the import is done', async () => {
+    const user = userEvent.setup();
+    renderAdd();
+
+    await user.click(screen.getByRole('tab', { name: 'Klistra in lista' }));
+    paste('hus - house');
+    await user.click(screen.getByRole('button', { name: 'Importera 1 ord' }));
+
+    expect(screen.getByRole('textbox', { name: /Ett ord per rad/ })).toHaveValue('');
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('opens a pasted row in the single-word form and takes it out of the paste', async () => {
+    const user = userEvent.setup();
+    renderAdd();
+
+    await user.click(screen.getByRole('tab', { name: 'Klistra in lista' }));
+    paste('hus - house\nminskade - decreased @verb minska/minskar/minskade/minskat');
+
+    await user.click(screen.getByRole('button', { name: 'Ändra rad 2' }));
+
+    expect(screen.getByRole('tab', { name: 'Ett ord' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByLabelText('Svenska')).toHaveValue('minskade');
+    expect(screen.getByLabelText('Preteritum')).toHaveValue('minskade');
+    expect(screen.getByRole('button', { name: /^decreased/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Klistra in lista' }));
+    expect(screen.getByRole('textbox', { name: /Ett ord per rad/ })).toHaveValue('hus - house');
+  });
+
+  it('renders a two hundred line paste', async () => {
+    const user = userEvent.setup();
+    renderAdd();
+
+    const lines = Array.from({ length: 200 }, (_, i) => `ord${i} - word${i}`).join('\n');
+    await user.click(screen.getByRole('tab', { name: 'Klistra in lista' }));
+    paste(lines);
+
+    expect(screen.getByText('200 klara, 0 behöver ses över')).toBeInTheDocument();
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(201);
+  });
+
+  it('gives each repeated line its own id', async () => {
+    const user = userEvent.setup();
+    renderAdd();
+
+    await user.click(screen.getByRole('tab', { name: 'Klistra in lista' }));
+    paste('hus - house\nhus - building');
+    await user.click(screen.getByRole('button', { name: 'Importera 2 ord' }));
+
+    const ids = useDeckStore.getState().userEntries.map((entry) => entry.id);
+    expect(new Set(ids).size).toBe(2);
   });
 
   it('carries the optional fields through', async () => {
