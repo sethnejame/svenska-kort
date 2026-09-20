@@ -1,0 +1,103 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 56px;
+  padding: 0 var(--space-4);
+  border-radius: var(--r-pill);
+  background: var(--c-card);
+  border: 2px solid var(--c-hairline);
+  color: var(--c-ink-soft);
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.field:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.correct {
+  border-color: var(--c-correct);
+  color: var(--c-correct);
+}
+
+.close {
+  border-color: var(--c-close);
+  color: var(--c-close);
+}
+
+.wrong {
+  border-color: var(--c-wrong);
+  color: var(--c-wrong);
+}
+
+.icon {
+  display: flex;
+  flex: none;
+}
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  /* 16px minimum: anything smaller makes iOS zoom the page on focus. */
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.input::placeholder {
+  color: var(--c-ink-soft);
+  font-weight: 400;
+}
+
+.diff {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-card);
+  background: var(--c-sunken);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.diffLine {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.diffLabel {
+  flex: none;
+  min-width: 4.5rem;
+  color: var(--c-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.mark {
+  background: var(--c-close);
+  color: var(--c-bg);
+  border-radius: var(--space-1);
+  padding: 0 2px;
+}
+
+.live {
+  margin: 0;
+  min-height: 1.25rem;
+  padding: 0 var(--space-4);
+  color: var(--c-ink-soft);
+  font-size: 0.875rem;
+}
