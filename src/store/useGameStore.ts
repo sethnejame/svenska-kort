@@ -1,12 +1,20 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { WordEntry } from '../types/word';
-import type { WordStat } from '../types/progress';
+import type { Profile, SessionResult, WordStat } from '../types/progress';
 import type { AnswerVerdict, Verdict } from '../lib/checkAnswer';
 import { checkAnswer, collectAllAnswers } from '../lib/checkAnswer';
 import { pointsFor } from '../lib/scoring';
 import { selectNext } from '../lib/selectNext';
 import { nextBox } from '../lib/leitner';
 import { entriesForDeck, getEntry } from '../data/decks';
+import {
+  consumeRecoveryFlag,
+  MAX_SESSION_HISTORY,
+  persistedStorage,
+  SCHEMA_VERSION,
+  STORAGE_KEY,
+} from './persisted';
 
 /**
  * `Checking` and `Next` from the diagram are transient — they happen inside an
@@ -40,6 +48,15 @@ export interface GameState {
   /** Stop-list for checkAnswer, built once per deck. */
   allAnswers: ReadonlySet<string>;
   rng: () => number;
+
+  // Career state: survives a session, and is what actually gets persisted.
+  schemaVersion: number;
+  sessionHistory: SessionResult[];
+  profile: Profile | null;
+  bestStreakEver: number;
+  totalScore: number;
+  /** Set when the stored blob was unreadable and defaults were used. T16 surfaces it. */
+  storageRecovered: boolean;
 }
 
 export interface GameActions {
@@ -52,7 +69,7 @@ export interface GameActions {
   endSession: (now: number) => void;
 }
 
-const initialState: GameState = {
+export const INITIAL_GAME_STATE: GameState = {
   status: 'idle',
   deckId: null,
   pool: [],
@@ -74,7 +91,27 @@ const initialState: GameState = {
   stats: {},
   allAnswers: new Set<string>(),
   rng: Math.random,
+  schemaVersion: SCHEMA_VERSION,
+  sessionHistory: [],
+  profile: null,
+  bestStreakEver: 0,
+  totalScore: 0,
+  storageRecovered: false,
 };
+
+/** The fields a new session inherits: a learner's history, not their current run. */
+function career(state: GameState) {
+  return {
+    rng: state.rng,
+    stats: state.stats,
+    sessionHistory: state.sessionHistory,
+    profile: state.profile,
+    bestStreakEver: state.bestStreakEver,
+    totalScore: state.totalScore,
+    storageRecovered: state.storageRecovered,
+    schemaVersion: state.schemaVersion,
+  };
+}
 
 function poolEntries(pool: readonly string[]): WordEntry[] {
   const entries: WordEntry[] = [];
@@ -114,12 +151,37 @@ function bumpStat(
   };
 }
 
+/**
+ * Closes out a session: banks the score and appends a SessionResult, keeping
+ * the newest 50. A session nobody answered is not worth a row.
+ */
+function finishSession(state: GameState, now: number): Partial<GameState> {
+  const ended = { status: 'done' as const, currentId: null, flipped: false, endedAt: now };
+  if (state.answered === 0) return ended;
+
+  const result: SessionResult = {
+    id: crypto.randomUUID(),
+    deckId: state.deckId ?? '',
+    startedAt: new Date(state.startedAt).toISOString(),
+    endedAt: new Date(now).toISOString(),
+    answered: state.answered,
+    correct: state.correct,
+    bestStreak: state.bestStreakInSession,
+    score: state.sessionScore,
+  };
+
+  return {
+    ...ended,
+    sessionHistory: [...state.sessionHistory, result].slice(-MAX_SESSION_HISTORY),
+    totalScore: state.totalScore + state.sessionScore,
+    bestStreakEver: Math.max(state.bestStreakEver, state.bestStreakInSession),
+  };
+}
+
 /** Draws the next card, or finishes the session when the pool is empty. */
 function drawNext(state: GameState, now: number): Partial<GameState> {
   const entries = poolEntries(state.pool);
-  if (entries.length === 0) {
-    return { status: 'done', currentId: null, flipped: false, endedAt: now };
-  }
+  if (entries.length === 0) return finishSession(state, now);
 
   const entry = selectNext(entries, state.stats, state.recentIds, state.rng);
   return {
@@ -148,20 +210,41 @@ function resolveCard(state: GameState, verdict: Verdict, now: number): Partial<G
   };
 }
 
-export const useGameStore = create<GameState & GameActions>((set, get) => ({
-  ...initialState,
+const createGame = (
+  set: (partial: Partial<GameState & GameActions>) => void,
+  get: () => GameState & GameActions,
+): GameState & GameActions => ({
+  ...INITIAL_GAME_STATE,
 
   startSession: (deckId, now) => {
+    const state = get();
     const entries = entriesForDeck(deckId);
-    const fresh: GameState = {
-      ...initialState,
-      rng: get().rng,
+
+    const unfinished = state.endedAt === null && state.answered > 0;
+
+    // A reload lands here with the run still in the store. Picking the same
+    // deck back up mid-run keeps the streak and score rather than charging the
+    // learner for refreshing the page.
+    if (unfinished && state.deckId === deckId && state.pool.length > 0) {
+      const resumed: GameState = { ...state, allAnswers: collectAllAnswers(entries) };
+      set({ ...resumed, ...drawNext(resumed, now) });
+      return;
+    }
+
+    // Otherwise the previous run is over for good, so it is banked here rather
+    // than when the Play route unmounts — a remount must not cost a session.
+    const previous = unfinished ? { ...state, ...finishSession(state, now) } : state;
+
+    const base: GameState = {
+      ...INITIAL_GAME_STATE,
+      ...career(previous),
       deckId,
       pool: entries.map((entry) => entry.id),
       allAnswers: collectAllAnswers(entries),
       startedAt: now,
     };
-    set({ ...fresh, ...drawNext(fresh, now) });
+
+    set({ ...base, ...drawNext(base, now) });
   },
 
   setInput: (input) => {
@@ -207,6 +290,8 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
         sessionScore: state.sessionScore + points,
         streak,
         bestStreakInSession: Math.max(state.bestStreakInSession, streak),
+        // Tracked live, not at session end, so a reload cannot lose a record.
+        bestStreakEver: Math.max(state.bestStreakEver, streak),
       });
       return;
     }
@@ -259,6 +344,37 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   endSession: (now) => {
     const state = get();
     if (state.status === 'idle' || state.status === 'done') return;
-    set({ status: 'done', currentId: null, flipped: false, endedAt: now });
+    set(finishSession(state, now));
   },
-}));
+});
+
+export const useGameStore = create<GameState & GameActions>()(
+  persist(createGame, {
+    name: STORAGE_KEY,
+    version: SCHEMA_VERSION,
+    storage: persistedStorage,
+    // Mid-question state is deliberately absent: a reload draws a fresh card
+    // rather than restoring a half-typed answer. The run itself survives.
+    partialize: (state) => ({
+      schemaVersion: SCHEMA_VERSION,
+      stats: state.stats,
+      sessionHistory: state.sessionHistory,
+      profile: state.profile,
+      bestStreakEver: state.bestStreakEver,
+      totalScore: state.totalScore,
+      deckId: state.deckId,
+      pool: state.pool,
+      streak: state.streak,
+      bestStreakInSession: state.bestStreakInSession,
+      sessionScore: state.sessionScore,
+      answered: state.answered,
+      correct: state.correct,
+      startedAt: state.startedAt,
+      endedAt: state.endedAt,
+    }),
+  }),
+);
+
+// Rehydration is synchronous, so by here the storage layer knows whether it had
+// to fall back to defaults.
+if (consumeRecoveryFlag()) useGameStore.setState({ storageRecovered: true });

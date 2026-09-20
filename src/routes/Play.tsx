@@ -37,7 +37,6 @@ export function Play() {
   const flip = useGameStore((s) => s.flip);
   const skip = useGameStore((s) => s.skip);
   const continue_ = useGameStore((s) => s.continue_);
-  const endSession = useGameStore((s) => s.endSession);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const swiped = useRef(false);
@@ -50,12 +49,11 @@ export function Play() {
   // comma-joined list, or every alternative would show up as a difference.
   const answer = lastVerdict?.matched ?? entry?.english[0] ?? '';
 
+  // No cleanup that ends the session: StrictMode remounts this effect, and an
+  // unmount must never cost a run. `startSession` banks an abandoned one.
   useEffect(() => {
     startSession(deckId, Date.now());
-    return () => {
-      endSession(Date.now());
-    };
-  }, [deckId, startSession, endSession]);
+  }, [deckId, startSession]);
 
   // A correct answer celebrates briefly and advances itself.
   useEffect(() => {
