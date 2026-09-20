@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { entriesFileSchema } from '../src/data/schema';
+import { BUILTIN_DECKS } from '../src/data/decks';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const entriesPath = resolve(root, 'src/data/entries.json');
@@ -44,6 +45,13 @@ for (const entry of entries) {
   seen.add(entry.id);
 }
 
+const allTags = new Set(entries.flatMap((entry) => entry.tags ?? []));
+for (const deck of BUILTIN_DECKS) {
+  if (deck.tag !== null && !allTags.has(deck.tag)) {
+    failures.push(`deck '${deck.id}': tag '${deck.tag}' matches no entry`);
+  }
+}
+
 if (failures.length > 0) report();
 
-console.log(`✓ ${entries.length} entries valid`);
+console.log(`✓ ${entries.length} entries valid, ${BUILTIN_DECKS.length} decks resolve`);

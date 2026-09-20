@@ -1,1 +1,723 @@
-[]
+[
+  {
+    "id": "forberedd-adjective",
+    "swedish": "förberedd",
+    "english": ["prepared", "ready"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "förberedd", "neuter": "förberett", "plural": "förberedda" },
+    "note": "Past participle of 'förbereda' used as an adjective. The notes read 'förbered – prepare', which is the imperative; 'prepared' is the sense meant here.",
+    "tags": ["news", "everyday"],
+    "level": 2
+  },
+  {
+    "id": "begrava-verb",
+    "swedish": "begravdes",
+    "lemma": "begrava",
+    "english": ["was buried", "were buried"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "begrava", "present": "begraver", "past": "begravde", "supine": "begravt", "imperative": "begrav", "group": 2 },
+    "note": "The -s ending makes it passive: begravdes = was buried.",
+    "tags": ["news", "verb"],
+    "level": 3
+  },
+  {
+    "id": "sorja-verb",
+    "swedish": "sörjer",
+    "lemma": "sörja",
+    "english": ["grieving", "mourning", "grieves", "mourns"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "sörja", "present": "sörjer", "past": "sörjde", "supine": "sörjt", "imperative": "sörj", "group": 2 },
+    "tags": ["news", "verb"],
+    "level": 3
+  },
+  {
+    "id": "makt-noun",
+    "swedish": "makt",
+    "english": ["power"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en makt", "defSg": "makten", "indefPl": "makter", "defPl": "makterna" },
+    "tags": ["news", "politics"],
+    "level": 2
+  },
+  {
+    "id": "farre-adjective",
+    "swedish": "färre",
+    "english": ["fewer"],
+    "pos": "adjective",
+    "forms": { "kind": "none" },
+    "note": "Comparative of 'få' (few). Indeclinable — no positive or superlative form in normal use.",
+    "tags": ["news"],
+    "level": 2
+  },
+  {
+    "id": "skyddande-adjective",
+    "swedish": "skyddande",
+    "english": ["protective"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "skyddande", "neuter": "skyddande", "plural": "skyddande" },
+    "note": "Present participle of 'skydda' (to protect). Indeclinable — the same in all three forms.",
+    "tags": ["news"],
+    "level": 3
+  },
+  {
+    "id": "antikropp-noun",
+    "swedish": "antikroppar",
+    "lemma": "antikropp",
+    "english": ["antibodies"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en antikropp", "defSg": "antikroppen", "indefPl": "antikroppar", "defPl": "antikropparna" },
+    "tags": ["news"],
+    "level": 3
+  },
+  {
+    "id": "antal-noun",
+    "swedish": "antal / antalet",
+    "lemma": "antal",
+    "english": ["number", "the number"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "ett", "indefSg": "ett antal", "defSg": "antalet", "indefPl": "antal", "defPl": "antalen" },
+    "note": "An ett-word whose plural is identical to the singular.",
+    "tags": ["news"],
+    "level": 2
+  },
+  {
+    "id": "minska-verb",
+    "swedish": "minskade",
+    "lemma": "minska",
+    "english": ["decreased", "reduced", "went down"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "minska", "present": "minskar", "past": "minskade", "supine": "minskat", "imperative": "minska", "group": 1 },
+    "tags": ["news", "verb"],
+    "level": 2
+  },
+  {
+    "id": "gilla-verb",
+    "swedish": "gillar",
+    "lemma": "gilla",
+    "english": ["likes", "like (easier)"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "gilla", "present": "gillar", "past": "gillade", "supine": "gillat", "imperative": "gilla", "group": 1 },
+    "note": "The easier of the two words for 'like' — compare 'tycker om', which is a particle verb.",
+    "tags": ["everyday", "verb"],
+    "level": 1
+  },
+  {
+    "id": "tycka-om-verb",
+    "swedish": "tycker om",
+    "lemma": "tycka om",
+    "english": ["like (harder)", "likes", "is fond of"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "tycka om", "present": "tycker om", "past": "tyckte om", "supine": "tyckt om", "imperative": "tyck om", "group": 2 },
+    "note": "Particle verb — 'om' is stressed and splits from the verb. Harder than 'gillar', which means the same thing.",
+    "example": { "sv": "Jag tycker om att läsa nyheter.", "en": "I like reading the news." },
+    "tags": ["everyday", "verb"],
+    "level": 2
+  },
+  {
+    "id": "erbjuda-verb",
+    "swedish": "erbjuds",
+    "lemma": "erbjuda",
+    "english": ["offered", "is offered", "are offered"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "erbjuda", "present": "erbjuder", "past": "erbjöd", "supine": "erbjudit", "imperative": "erbjud", "group": 4 },
+    "note": "Passive -s form of a strong verb: erbjuds = is being offered.",
+    "tags": ["news", "verb"],
+    "level": 3
+  },
+  {
+    "id": "darfor-adverb",
+    "swedish": "därför",
+    "english": ["therefore", "that's why", "so"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "tags": ["news", "everyday"],
+    "level": 1
+  },
+  {
+    "id": "undersokning-noun",
+    "swedish": "undersökning",
+    "english": ["survey", "study", "investigation"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en undersökning", "defSg": "undersökningen", "indefPl": "undersökningar", "defPl": "undersökningarna" },
+    "tags": ["news"],
+    "level": 2
+  },
+  {
+    "id": "valfraga-noun",
+    "swedish": "valfråga",
+    "english": ["election question", "election issue"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en valfråga", "defSg": "valfrågan", "indefPl": "valfrågor", "defPl": "valfrågorna" },
+    "note": "Compound of 'val' (election) + 'fråga' (question/issue).",
+    "tags": ["news", "politics"],
+    "level": 3
+  },
+  {
+    "id": "mata-verb",
+    "swedish": "mäter",
+    "lemma": "mäta",
+    "english": ["measures", "measure"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "mäta", "present": "mäter", "past": "mätte", "supine": "mätt", "imperative": "mät", "group": 2 },
+    "tags": ["news", "verb"],
+    "level": 2
+  },
+  {
+    "id": "kunskap-noun",
+    "swedish": "kunskaper",
+    "lemma": "kunskap",
+    "english": ["knowledge", "skills"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en kunskap", "defSg": "kunskapen", "indefPl": "kunskaper", "defPl": "kunskaperna" },
+    "note": "Usually plural in Swedish where English uses the uncountable 'knowledge'.",
+    "tags": ["school"],
+    "level": 2
+  },
+  {
+    "id": "femtonaring-noun",
+    "swedish": "15-åringar",
+    "lemma": "15-åring",
+    "english": ["fifteen-year-olds", "15-year-olds"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en 15-åring", "defSg": "15-åringen", "indefPl": "15-åringar", "defPl": "15-åringarna" },
+    "note": "The -åring pattern works for any age: en 40-åring, en 7-åring.",
+    "tags": ["news", "school"],
+    "level": 2
+  },
+  {
+    "id": "enligt-preposition",
+    "swedish": "enligt",
+    "english": ["according to"],
+    "pos": "preposition",
+    "forms": { "kind": "none" },
+    "tags": ["news"],
+    "level": 1
+  },
+  {
+    "id": "enligt-den-phrase",
+    "swedish": "enligt den",
+    "english": ["according to it", "according to"],
+    "pos": "phrase",
+    "forms": { "kind": "none" },
+    "note": "'den' points back to a previously mentioned en-word — 'according to it' (the survey, the report).",
+    "tags": ["news", "phrase"],
+    "level": 2
+  },
+  {
+    "id": "samre-adjective",
+    "swedish": "sämre",
+    "english": ["worse"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "dålig", "neuter": "dåligt", "plural": "dåliga", "comparative": "sämre", "superlative": "sämst" },
+    "note": "Irregular comparative of 'dålig' (bad). 'dåligare' exists but is rare.",
+    "tags": ["everyday"],
+    "level": 2
+  },
+  {
+    "id": "regering-noun",
+    "swedish": "regeringen",
+    "lemma": "regering",
+    "english": ["the government"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en regering", "defSg": "regeringen", "indefPl": "regeringar", "defPl": "regeringarna" },
+    "example": { "sv": "Regeringen presenterade ett nytt förslag.", "en": "The government presented a new proposal." },
+    "tags": ["news", "politics"],
+    "level": 2
+  },
+  {
+    "id": "misslyckas-verb",
+    "swedish": "misslyckats",
+    "lemma": "misslyckas",
+    "english": ["failed", "has failed"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "misslyckas", "present": "misslyckas", "past": "misslyckades", "supine": "misslyckats", "group": 1 },
+    "note": "Deponent verb — it always carries -s and has no active form.",
+    "tags": ["news", "verb"],
+    "level": 3
+  },
+  {
+    "id": "nedgang-noun",
+    "swedish": "nedgången",
+    "lemma": "nedgång",
+    "english": ["the decline", "the downturn"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en nedgång", "defSg": "nedgången", "indefPl": "nedgångar", "defPl": "nedgångarna" },
+    "tags": ["news"],
+    "level": 3
+  },
+  {
+    "id": "galla-verb",
+    "swedish": "gäller",
+    "lemma": "gälla",
+    "english": ["applies", "is valid", "concerns"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "gälla", "present": "gäller", "past": "gällde", "supine": "gällt", "group": 2 },
+    "example": { "sv": "Det gäller alla elever.", "en": "It applies to all pupils." },
+    "tags": ["news", "verb"],
+    "level": 2
+  },
+  {
+    "id": "samlas-verb",
+    "swedish": "samlas",
+    "english": ["gather", "assemble", "come together"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "samlas", "present": "samlas", "past": "samlades", "supine": "samlats", "group": 1 },
+    "note": "Reciprocal -s verb: people samlas (gather themselves). The active 'samla' means to collect something.",
+    "tags": ["news", "verb"],
+    "level": 2
+  },
+  {
+    "id": "riksdag-noun",
+    "swedish": "riksdagen",
+    "lemma": "riksdag",
+    "english": ["parliament", "the parliament"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en riksdag", "defSg": "riksdagen", "indefPl": "riksdagar", "defPl": "riksdagarna" },
+    "note": "The Swedish national parliament. Almost always used in the definite: Riksdagen.",
+    "tags": ["news", "politics"],
+    "level": 2
+  },
+  {
+    "id": "bilda-verb",
+    "swedish": "bilda",
+    "english": ["form", "to form", "create"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "bilda", "present": "bildar", "past": "bildade", "supine": "bildat", "imperative": "bilda", "group": 1 },
+    "example": { "sv": "Partierna ska bilda regering.", "en": "The parties are going to form a government." },
+    "tags": ["news", "politics", "verb"],
+    "level": 2
+  },
+  {
+    "id": "ater-adverb",
+    "swedish": "åter",
+    "english": ["again", "back"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "note": "More formal than 'igen'; common in written news and in compounds (återkomma, återigen).",
+    "tags": ["news"],
+    "level": 2
+  },
+  {
+    "id": "foremal-noun",
+    "swedish": "föremål",
+    "english": ["objects", "object", "item"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "ett", "indefSg": "ett föremål", "defSg": "föremålet", "indefPl": "föremål", "defPl": "föremålen" },
+    "note": "JUDGEMENT CALL: the notes read 'förmål', which is almost certainly 'föremål' (object/item). Plural is identical to the singular.",
+    "tags": ["news"],
+    "level": 3
+  },
+  {
+    "id": "omtyckt-adjective",
+    "swedish": "omtyckt",
+    "english": ["popular", "well-liked"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "omtyckt", "neuter": "omtyckt", "plural": "omtyckta" },
+    "note": "Built from 'tycka om' — literally 'liked'.",
+    "tags": ["everyday"],
+    "level": 2
+  },
+  {
+    "id": "forare-noun",
+    "swedish": "förarna",
+    "lemma": "förare",
+    "english": ["the drivers"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en förare", "defSg": "föraren", "indefPl": "förare", "defPl": "förarna" },
+    "note": "An -are agent noun: the plural is identical to the singular, and the definite plural drops the final -e.",
+    "tags": ["news"],
+    "level": 2
+  },
+  {
+    "id": "lag-noun",
+    "swedish": "lagen",
+    "lemma": "lag",
+    "english": ["teams", "the teams"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "ett", "indefSg": "ett lag", "defSg": "laget", "indefPl": "lag", "defPl": "lagen" },
+    "note": "JUDGEMENT CALL / homograph: here 'lagen' is the definite plural of 'ett lag' (a team). The identical 'lagen' is also the definite singular of 'en lag' (the law). Context decides.",
+    "example": { "sv": "Lagen möttes i finalen.", "en": "The teams met in the final." },
+    "tags": ["news"],
+    "level": 3
+  },
+  {
+    "id": "forklaring-noun",
+    "swedish": "förklaring",
+    "english": ["explanation"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en förklaring", "defSg": "förklaringen", "indefPl": "förklaringar", "defPl": "förklaringarna" },
+    "tags": ["school"],
+    "level": 1
+  },
+  {
+    "id": "mening-noun",
+    "swedish": "mening",
+    "english": ["sentence", "meaning", "point"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en mening", "defSg": "meningen", "indefPl": "meningar", "defPl": "meningarna" },
+    "note": "Two senses: a grammatical sentence, and meaning/point — 'Vad är meningen med det?'",
+    "tags": ["school"],
+    "level": 1
+  },
+  {
+    "id": "kamrat-noun",
+    "swedish": "kamrat",
+    "english": ["comrade", "mate", "friend"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en kamrat", "defSg": "kamraten", "indefPl": "kamrater", "defPl": "kamraterna" },
+    "note": "Also 'klasskamrat' (classmate), 'arbetskamrat' (workmate).",
+    "tags": ["everyday", "school"],
+    "level": 2
+  },
+  {
+    "id": "vidare-adverb",
+    "swedish": "vidare",
+    "english": ["further", "furthermore", "on"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "tags": ["news"],
+    "level": 2
+  },
+  {
+    "id": "lattast-adjective",
+    "swedish": "lättast",
+    "lemma": "lätt",
+    "english": ["easiest", "lightest"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "lätt", "neuter": "lätt", "plural": "lätta", "comparative": "lättare", "superlative": "lättast" },
+    "note": "'lätt' covers both easy and light in weight.",
+    "tags": ["school"],
+    "level": 1
+  },
+  {
+    "id": "svarast-adjective",
+    "swedish": "svårast",
+    "lemma": "svår",
+    "english": ["hardest", "most difficult"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "svår", "neuter": "svårt", "plural": "svåra", "comparative": "svårare", "superlative": "svårast" },
+    "tags": ["school"],
+    "level": 1
+  },
+  {
+    "id": "skillnad-noun",
+    "swedish": "skillnad / skillnaden",
+    "lemma": "skillnad",
+    "english": ["difference", "the difference"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en skillnad", "defSg": "skillnaden", "indefPl": "skillnader", "defPl": "skillnaderna" },
+    "tags": ["school", "news"],
+    "level": 2
+  },
+  {
+    "id": "modersmal-noun",
+    "swedish": "modersmål",
+    "english": ["mother tongue", "native language", "first language"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "ett", "indefSg": "ett modersmål", "defSg": "modersmålet", "indefPl": "modersmål", "defPl": "modersmålen" },
+    "tags": ["school"],
+    "level": 2
+  },
+  {
+    "id": "forslag-noun",
+    "swedish": "förslag",
+    "english": ["proposal", "suggestion"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "ett", "indefSg": "ett förslag", "defSg": "förslaget", "indefPl": "förslag", "defPl": "förslagen" },
+    "tags": ["news", "politics"],
+    "level": 2
+  },
+  {
+    "id": "trana-verb",
+    "swedish": "träna",
+    "english": ["exercise", "to exercise", "practise", "train"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "träna", "present": "tränar", "past": "tränade", "supine": "tränat", "imperative": "träna", "group": 1 },
+    "tags": ["school", "everyday", "verb"],
+    "level": 1
+  },
+  {
+    "id": "uttal-noun",
+    "swedish": "uttal",
+    "english": ["pronunciation"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "ett", "indefSg": "ett uttal", "defSg": "uttalet", "indefPl": "uttal", "defPl": "uttalen" },
+    "tags": ["school"],
+    "level": 2
+  },
+  {
+    "id": "att-man-kan-ett-sprak-phrase",
+    "swedish": "att man kan ett språk",
+    "english": ["to know a language", "that you know a language"],
+    "pos": "phrase",
+    "forms": { "kind": "none" },
+    "note": "Swedish uses 'kunna' for knowing a language or a skill, never 'veta'.",
+    "tags": ["phrase", "school"],
+    "level": 3
+  },
+  {
+    "id": "fast-jag-tycker-phrase",
+    "swedish": "fast jag tycker",
+    "english": ["although I think", "but I think"],
+    "pos": "phrase",
+    "forms": { "kind": "none" },
+    "note": "Softens a disagreement; very common in speech.",
+    "tags": ["phrase", "spoken"],
+    "level": 2
+  },
+  {
+    "id": "egentligen-adverb",
+    "swedish": "egentligen",
+    "english": ["actually", "really"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "note": "Signals a correction — 'actually, it's like this'. Compare 'verkligen', which intensifies.",
+    "tags": ["everyday", "spoken"],
+    "level": 1
+  },
+  {
+    "id": "invandra-verb",
+    "swedish": "invandrade",
+    "lemma": "invandra",
+    "english": ["immigrated"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "invandra", "present": "invandrar", "past": "invandrade", "supine": "invandrat", "group": 1 },
+    "tags": ["news", "verb"],
+    "level": 3
+  },
+  {
+    "id": "innebara-verb",
+    "swedish": "innebär",
+    "lemma": "innebära",
+    "english": ["implies", "means", "entails"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "innebära", "present": "innebär", "past": "innebar", "supine": "inneburit", "group": 4 },
+    "tags": ["news", "verb"],
+    "level": 3
+  },
+  {
+    "id": "i-morgon-adverb",
+    "swedish": "i morgon",
+    "english": ["tomorrow"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "note": "Also written as one word, 'imorgon'. Both are accepted.",
+    "tags": ["everyday"],
+    "level": 1
+  },
+  {
+    "id": "brinna-verb",
+    "swedish": "brinner",
+    "lemma": "brinna",
+    "english": ["burning", "burns", "is burning"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "brinna", "present": "brinner", "past": "brann", "supine": "brunnit", "group": 4 },
+    "note": "Intransitive — a thing brinner by itself. To burn something is 'bränna'.",
+    "tags": ["news", "everyday", "verb"],
+    "level": 2
+  },
+  {
+    "id": "verkligen-adverb",
+    "swedish": "verkligen",
+    "english": ["really", "truly"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "note": "Intensifies. Compare 'egentligen', which corrects.",
+    "tags": ["everyday", "spoken"],
+    "level": 1
+  },
+  {
+    "id": "alltsa-adverb",
+    "swedish": "alltså",
+    "english": ["so", "therefore", "in other words"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "note": "Extremely common filler in speech, roughly 'like' or 'I mean'.",
+    "tags": ["everyday", "spoken"],
+    "level": 1
+  },
+  {
+    "id": "engagerad-adjective",
+    "swedish": "engagerad",
+    "english": ["committed", "engaged", "involved"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "engagerad", "neuter": "engagerat", "plural": "engagerade" },
+    "tags": ["news"],
+    "level": 2
+  },
+  {
+    "id": "elev-noun",
+    "swedish": "elever",
+    "lemma": "elev",
+    "english": ["pupils", "students"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en elev", "defSg": "eleven", "indefPl": "elever", "defPl": "eleverna" },
+    "note": "School pupils. University students are 'studenter'.",
+    "tags": ["school"],
+    "level": 1
+  },
+  {
+    "id": "utflykt-noun",
+    "swedish": "utflykt",
+    "english": ["excursion", "outing", "trip"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en utflykt", "defSg": "utflykten", "indefPl": "utflykter", "defPl": "utflykterna" },
+    "tags": ["school", "everyday"],
+    "level": 2
+  },
+  {
+    "id": "allesammans-phrase",
+    "swedish": "allesammans",
+    "english": ["everyone", "everybody", "all of you"],
+    "pos": "phrase",
+    "forms": { "kind": "none" },
+    "note": "Written 'alle sammans' in the notes; the standard spelling is one word. Common as a greeting: 'Hej allesammans!'",
+    "tags": ["phrase", "spoken", "everyday"],
+    "level": 2
+  },
+  {
+    "id": "du-ar-sen-idag-phrase",
+    "swedish": "du är sen idag",
+    "english": ["you are late today", "you're late today"],
+    "pos": "phrase",
+    "forms": { "kind": "none" },
+    "note": "'sen' is the adjective (late); 'sent' is the adverb.",
+    "tags": ["phrase", "spoken"],
+    "level": 1
+  },
+  {
+    "id": "missa-verb",
+    "swedish": "missade",
+    "lemma": "missa",
+    "english": ["missed"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "missa", "present": "missar", "past": "missade", "supine": "missat", "imperative": "missa", "group": 1 },
+    "tags": ["everyday", "verb"],
+    "level": 1
+  },
+  {
+    "id": "utbildad-adjective",
+    "swedish": "utbildad",
+    "english": ["educated", "trained", "qualified"],
+    "pos": "adjective",
+    "forms": { "kind": "adjective", "base": "utbildad", "neuter": "utbildat", "plural": "utbildade" },
+    "tags": ["school", "news"],
+    "level": 2
+  },
+  {
+    "id": "stadare-noun",
+    "swedish": "städare",
+    "english": ["cleaner"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en städare", "defSg": "städaren", "indefPl": "städare", "defPl": "städarna" },
+    "tags": ["news", "everyday"],
+    "level": 2
+  },
+  {
+    "id": "stadbransch-noun",
+    "swedish": "städbranschen",
+    "lemma": "städbransch",
+    "english": ["the cleaning industry", "cleaning industry"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en städbransch", "defSg": "städbranschen", "indefPl": "städbranscher", "defPl": "städbranscherna" },
+    "note": "Compound: städ- (cleaning) + bransch (industry, sector).",
+    "tags": ["news"],
+    "level": 3
+  },
+  {
+    "id": "ha-verb",
+    "swedish": "har haft",
+    "lemma": "ha",
+    "english": ["has had", "have had"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "ha", "present": "har", "past": "hade", "supine": "haft", "imperative": "ha", "group": 4 },
+    "note": "Perfect tense: 'har' plus the supine 'haft'. Irregular.",
+    "tags": ["everyday", "verb"],
+    "level": 1
+  },
+  {
+    "id": "men-vada-phrase",
+    "swedish": "men vadå",
+    "english": ["but what", "but what do you mean", "so what"],
+    "pos": "phrase",
+    "forms": { "kind": "none" },
+    "note": "'vadå' pushes back — 'what do you mean by that?'. Mildly confrontational.",
+    "tags": ["phrase", "spoken"],
+    "level": 2
+  },
+  {
+    "id": "grej-noun",
+    "swedish": "en grej",
+    "lemma": "grej",
+    "english": ["a thing", "thing"],
+    "pos": "noun",
+    "forms": { "kind": "noun", "gender": "en", "indefSg": "en grej", "defSg": "grejen", "indefPl": "grejer", "defPl": "grejerna" },
+    "note": "Colloquial. 'grejer' in the plural means stuff or belongings.",
+    "tags": ["everyday", "spoken"],
+    "level": 1
+  },
+  {
+    "id": "handa-verb",
+    "swedish": "hände",
+    "lemma": "hända",
+    "english": ["happened"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "hända", "present": "händer", "past": "hände", "supine": "hänt", "group": 2 },
+    "example": { "sv": "Vad hände igår?", "en": "What happened yesterday?" },
+    "tags": ["everyday", "news", "verb"],
+    "level": 1
+  },
+  {
+    "id": "ta-verb",
+    "swedish": "tagit",
+    "lemma": "ta",
+    "english": ["taken"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "ta", "present": "tar", "past": "tog", "supine": "tagit", "imperative": "ta", "group": 4 },
+    "note": "Irregular. The longer infinitive 'taga' is archaic.",
+    "tags": ["everyday", "verb"],
+    "level": 2
+  },
+  {
+    "id": "inne-adverb",
+    "swedish": "inne",
+    "english": ["inside", "in"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "note": "Location — 'han är inne'. The direction is 'in' — 'han går in'.",
+    "tags": ["everyday"],
+    "level": 1
+  },
+  {
+    "id": "fatta-verb",
+    "swedish": "fattar",
+    "lemma": "fatta",
+    "english": ["get", "understand", "gets"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "fatta", "present": "fattar", "past": "fattade", "supine": "fattat", "imperative": "fatta", "group": 1 },
+    "note": "Colloquial 'get it'. 'Fattar du?' = Do you get it?",
+    "tags": ["everyday", "spoken", "verb"],
+    "level": 1
+  },
+  {
+    "id": "nog-adverb",
+    "swedish": "nog",
+    "english": ["enough", "probably"],
+    "pos": "adverb",
+    "forms": { "kind": "none" },
+    "note": "Two senses: 'enough' after an adjective (stor nog), and 'probably' as a sentence adverb (han kommer nog).",
+    "tags": ["everyday"],
+    "level": 2
+  },
+  {
+    "id": "paborja-verb",
+    "swedish": "påbörjar",
+    "lemma": "påbörja",
+    "english": ["begins", "starts", "commences"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "påbörja", "present": "påbörjar", "past": "påbörjade", "supine": "påbörjat", "imperative": "påbörja", "group": 1 },
+    "note": "More formal than 'börja'; takes a direct object.",
+    "tags": ["news", "verb"],
+    "level": 3
+  }
+]
