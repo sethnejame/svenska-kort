@@ -3,8 +3,8 @@ import { ALL_ENTRIES, BUILTIN_DECKS, entriesForDeck, getDeck, getEntry } from '.
 import { entriesFileSchema } from './schema';
 
 describe('seed entries', () => {
-  it('ships 71 entries that satisfy the schema', () => {
-    expect(ALL_ENTRIES).toHaveLength(71);
+  it('ships 72 entries that satisfy the schema', () => {
+    expect(ALL_ENTRIES).toHaveLength(72);
     expect(entriesFileSchema.safeParse(ALL_ENTRIES).success).toBe(true);
   });
 
@@ -52,12 +52,12 @@ describe('seed entries', () => {
 
 describe('entriesForDeck', () => {
   it.each([
-    ['nyheter', 40],
+    ['nyheter', 41],
     ['vardag', 24],
-    ['verb', 21],
+    ['verb', 22],
     ['skola', 15],
     ['fraser', 6],
-    ['alla', 71],
+    ['alla', 72],
   ])('%s holds %i entries', (deckId, count) => {
     expect(entriesForDeck(deckId)).toHaveLength(count);
   });

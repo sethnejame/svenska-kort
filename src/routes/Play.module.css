@@ -11,21 +11,9 @@
   margin: 0 auto;
 }
 
-.strip {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: var(--tap-min);
-}
-
-.deckName {
-  font-family: var(--font-display);
-  font-weight: 600;
-  color: var(--c-ink-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* ScoreStrip brings its own padding, so the screen's top padding would double it. */
+.screen > header {
+  padding: 0;
 }
 
 .band {
@@ -34,19 +22,48 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--r-card);
+  touch-action: pan-y;
 }
 
-.cardSlot {
-  width: 100%;
-  height: 100%;
-  max-height: 380px;
-  border-radius: var(--r-card);
-  background: var(--c-card);
-  box-shadow: var(--shadow-card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--c-ink-soft);
+.pulse {
+  animation: pulse 600ms ease-out;
+}
+
+.shakeSoft {
+  animation: shake 320ms ease-in-out;
+}
+
+.shakeHard {
+  animation: shake 420ms ease-in-out;
+  --shake-distance: 10px;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--c-correct);
+  }
+  40% {
+    box-shadow: 0 0 0 6px var(--c-correct);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(calc(-1 * var(--shake-distance, 6px)));
+  }
+  40%,
+  80% {
+    transform: translateX(var(--shake-distance, 6px));
+  }
 }
 
 .actions {
@@ -60,13 +77,93 @@
   border: 1px solid var(--c-hairline);
   border-radius: var(--r-pill);
   background: var(--c-card);
+  color: var(--c-ink);
   font-family: var(--font-display);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.action:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .primary {
   background: var(--c-primary);
   border-color: var(--c-primary);
   color: var(--c-bg);
+}
+
+.done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  text-align: center;
+}
+
+.doneTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  width: 100%;
+  max-width: 320px;
+}
+
+.summary dt {
+  color: var(--c-ink-soft);
+  font-size: 0.875rem;
+}
+
+.summary dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.doneLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 0 var(--space-5);
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No translation and no pulse — the state still reads through the outline. */
+  .pulse,
+  .shakeSoft,
+  .shakeHard {
+    animation: none;
+  }
+
+  .shakeSoft {
+    outline: 3px solid var(--c-close);
+    outline-offset: var(--space-2);
+  }
+
+  .shakeHard {
+    outline: 3px solid var(--c-wrong);
+    outline-offset: var(--space-2);
+  }
+
+  .pulse {
+    outline: 3px solid var(--c-correct);
+    outline-offset: var(--space-2);
+  }
 }

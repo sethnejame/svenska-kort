@@ -91,6 +91,17 @@
     "level": 2
   },
   {
+    "id": "oka-verb",
+    "swedish": "ökade",
+    "lemma": "öka",
+    "english": ["increased", "rose", "went up"],
+    "pos": "verb",
+    "forms": { "kind": "verb", "infinitive": "öka", "present": "ökar", "past": "ökade", "supine": "ökat", "imperative": "öka", "group": 1 },
+    "note": "The opposite of 'minskade'. The two turn up in the same sentence often enough to be worth learning as a pair — and 'increased' is exactly the kind of near-miss the answer checker has to refuse.",
+    "tags": ["news", "verb"],
+    "level": 2
+  },
+  {
     "id": "gilla-verb",
     "swedish": "gillar",
     "lemma": "gilla",

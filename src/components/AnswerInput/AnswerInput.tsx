@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react';
+import type { FormEvent, RefObject } from 'react';
 import type { Verdict } from '../../lib/checkAnswer';
 import type { DiffSegment } from '../../lib/diffChars';
 import { diffChars } from '../../lib/diffChars';
@@ -16,6 +16,8 @@ export interface AnswerInputProps {
   answer?: string;
   /** What was typed at the moment of grading. Frozen so the diff survives a retry. */
   submitted?: string;
+  /** Lets the route keep focus in the field and select it on a near miss. */
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
 /**
@@ -91,6 +93,7 @@ export function AnswerInput({
   verdict,
   answer = '',
   submitted = '',
+  inputRef,
 }: AnswerInputProps) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -108,6 +111,7 @@ export function AnswerInput({
           </span>
         )}
         <input
+          ref={inputRef}
           className={styles.input}
           type="text"
           value={value}
