@@ -1,0 +1,40 @@
+# Agent working files
+claude/
+.claude/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Test and tooling output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+*.tsbuildinfo
+.vite/
+.eslintcache
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
