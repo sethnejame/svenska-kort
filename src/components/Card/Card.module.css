@@ -1,0 +1,181 @@
+.card {
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 0;
+  background: none;
+  perspective: 1200px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  display: block;
+}
+
+.card:focus-visible {
+  outline: none;
+  border-radius: var(--r-card);
+  box-shadow: var(--focus-ring);
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 450ms var(--ease-spring);
+  transform: rotateY(0deg) rotate(-1.5deg);
+  animation: settle 600ms var(--ease-spring);
+}
+
+.flipped {
+  transform: rotateY(180deg) rotate(-1.5deg);
+}
+
+@keyframes settle {
+  from {
+    transform: translateY(-10px) rotate(-3deg);
+  }
+  to {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--r-card);
+  background: var(--c-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.back {
+  transform: rotateY(180deg);
+  gap: var(--space-4);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.posChip {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-4);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px var(--space-2);
+  border-radius: var(--r-pill);
+  background: var(--c-chip);
+  color: var(--c-primary);
+}
+
+.frontBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.swedish {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* Shrink to fit from grapheme count, so nothing has to be measured. */
+.sizeFull {
+  font-size: clamp(2rem, 9vw, 3.25rem);
+}
+.sizeMedium {
+  font-size: clamp(1.75rem, 7.5vw, 2.75rem);
+}
+.sizeSmall {
+  font-size: clamp(1.5rem, 6vw, 2.25rem);
+}
+.sizeTiny {
+  font-size: clamp(1.25rem, 5vw, 1.75rem);
+}
+
+.lemma {
+  font-size: 0.875rem;
+  color: var(--c-ink-soft);
+}
+
+.hint {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--c-ink-soft);
+}
+
+.english {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.875rem;
+}
+
+.exampleEn {
+  color: var(--c-ink-soft);
+}
+
+.note {
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--c-ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inner {
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
+  .flipped {
+    transform: none;
+  }
+
+  /* Both faces stack and cross-fade instead of rotating. */
+  .face {
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    transition: opacity 200ms linear;
+  }
+
+  .back {
+    transform: none;
+    opacity: 0;
+  }
+
+  .flipped .front {
+    opacity: 0;
+  }
+
+  .flipped .back {
+    opacity: 1;
+  }
+}
