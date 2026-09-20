@@ -67,6 +67,7 @@ export interface GameActions {
   skip: (now: number) => void;
   continue_: (now: number) => void;
   endSession: (now: number) => void;
+  saveProfile: (displayName: string, avatarSeed: string, now: number) => void;
 }
 
 export const INITIAL_GAME_STATE: GameState = {
@@ -345,6 +346,26 @@ const createGame = (
     const state = get();
     if (state.status === 'idle' || state.status === 'done') return;
     set(finishSession(state, now));
+  },
+
+  saveProfile: (displayName, avatarSeed, now) => {
+    const state = get();
+    const name = displayName.trim();
+    // The form rejects an empty name with a message; this is the last line.
+    if (name === '') return;
+
+    set({
+      profile: {
+        displayName: name,
+        avatarSeed,
+        // Setting up once and editing later must not reset the join date.
+        createdAt: state.profile?.createdAt ?? new Date(now).toISOString(),
+        // Snapshots for the leaderboard row. `totalScore` and `bestStreakEver`
+        // on the store stay authoritative; these are written, never read back.
+        totalScore: state.totalScore,
+        bestStreakEver: state.bestStreakEver,
+      },
+    });
   },
 });
 

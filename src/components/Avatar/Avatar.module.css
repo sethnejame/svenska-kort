@@ -1,0 +1,6 @@
+.avatar {
+  display: block;
+  border-radius: var(--r-pill);
+  background: var(--c-sunken);
+  flex: none;
+}
