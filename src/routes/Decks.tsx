@@ -8,11 +8,12 @@ import styles from './Decks.module.css';
 
 export function Decks() {
   const userDecks = useDeckStore((s) => s.userDecks);
+  const userEntries = useDeckStore((s) => s.userEntries);
   const selectDeck = useDeckStore((s) => s.selectDeck);
   const stats = useGameStore((s) => s.stats);
   const profile = useGameStore((s) => s.profile);
 
-  const decks = allDecks(userDecks);
+  const decks = allDecks(userDecks, userEntries);
 
   return (
     <main className={styles.screen}>
@@ -55,6 +56,10 @@ export function Decks() {
           );
         })}
       </ul>
+
+      <Link to="/add" className={styles.addLink} lang="sv">
+        Lägg till ord
+      </Link>
     </main>
   );
 }

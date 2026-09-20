@@ -8,6 +8,7 @@ import { pointsFor } from '../lib/scoring';
 import { selectNext } from '../lib/selectNext';
 import { nextBox } from '../lib/leitner';
 import { entriesForDeck, getEntry } from '../data/decks';
+import { useDeckStore } from './useDeckStore';
 import {
   consumeRecoveryFlag,
   MAX_SESSION_HISTORY,
@@ -114,10 +115,19 @@ function career(state: GameState) {
   };
 }
 
+/**
+ * Read at call time, not captured, so a word added on `/add` is playable in the
+ * very next session without a reload.
+ */
+function addedEntries(): WordEntry[] {
+  return useDeckStore.getState().userEntries;
+}
+
 function poolEntries(pool: readonly string[]): WordEntry[] {
+  const added = addedEntries();
   const entries: WordEntry[] = [];
   for (const id of pool) {
-    const entry = getEntry(id);
+    const entry = getEntry(id, added);
     if (entry) entries.push(entry);
   }
   return entries;
@@ -219,7 +229,7 @@ const createGame = (
 
   startSession: (deckId, now) => {
     const state = get();
-    const entries = entriesForDeck(deckId);
+    const entries = entriesForDeck(deckId, addedEntries());
 
     const unfinished = state.endedAt === null && state.answered > 0;
 
@@ -266,7 +276,7 @@ const createGame = (
     // An accidental Enter on an empty field must not cost a streak.
     if (state.input.trim() === '') return;
 
-    const entry = getEntry(state.currentId);
+    const entry = getEntry(state.currentId, addedEntries());
     if (!entry) return;
 
     const result = checkAnswer(state.input, entry, state.allAnswers);

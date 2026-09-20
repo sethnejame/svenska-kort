@@ -5,6 +5,7 @@ import { Card } from '../components/Card/Card';
 import { AnswerInput } from '../components/AnswerInput/AnswerInput';
 import { ScoreStrip } from '../components/ScoreStrip/ScoreStrip';
 import { useGameStore } from '../store/useGameStore';
+import { useDeckStore } from '../store/useDeckStore';
 import { getDeck, getEntry } from '../data/decks';
 import { cx } from '../utils/cx';
 import styles from './Play.module.css';
@@ -43,7 +44,9 @@ export function Play() {
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const [canContinue, setCanContinue] = useState(false);
 
-  const entry = currentId === null ? undefined : getEntry(currentId);
+  const userEntries = useDeckStore((s) => s.userEntries);
+
+  const entry = currentId === null ? undefined : getEntry(currentId, userEntries);
   const deckName = getDeck(deckId)?.name ?? deckId;
   // The diff compares against the answer that actually matched, not the whole
   // comma-joined list, or every alternative would show up as a difference.

@@ -42,7 +42,8 @@ describe('Decks', () => {
   it('renders one tile per builtin deck with its entry count', () => {
     renderDecks();
 
-    const tiles = screen.getAllByRole('link');
+    // Every link bar the one down to `/add`.
+    const tiles = screen.getAllByRole('link').filter((link) => link.textContent !== 'Lägg till ord');
     expect(tiles).toHaveLength(6);
 
     const expected: [string, number][] = [

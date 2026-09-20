@@ -22,17 +22,26 @@ export type BuiltinDeckId = BuiltinDeck['id'];
 
 const byId = new Map(ALL_ENTRIES.map((entry) => [entry.id, entry]));
 
-export function getEntry(id: string): WordEntry | undefined {
-  return byId.get(id);
+/**
+ * `userEntries` is whatever the learner has added. It is passed in rather than
+ * imported so this module stays a plain data module with no store dependency.
+ */
+export function getEntry(id: string, userEntries: readonly WordEntry[] = []): WordEntry | undefined {
+  return byId.get(id) ?? userEntries.find((entry) => entry.id === id);
 }
 
 export function getDeck(deckId: string): BuiltinDeck | undefined {
   return BUILTIN_DECKS.find((deck) => deck.id === deckId);
 }
 
-export function entriesForDeck(deckId: string): WordEntry[] {
+export function entriesForDeck(deckId: string, userEntries: readonly WordEntry[] = []): WordEntry[] {
   const deck = getDeck(deckId);
   if (!deck) return [];
-  if (deck.tag === null) return [...ALL_ENTRIES];
-  return ALL_ENTRIES.filter((entry) => entry.tags?.includes(deck.tag) ?? false);
+
+  const tag = deck.tag;
+  // `alla` has no tag and takes everything, including every added word.
+  if (tag === null) return [...ALL_ENTRIES, ...userEntries];
+
+  const matches = (entry: WordEntry) => entry.tags?.includes(tag) ?? false;
+  return [...ALL_ENTRIES.filter(matches), ...userEntries.filter(matches)];
 }

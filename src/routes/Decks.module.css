@@ -84,6 +84,21 @@
   color: var(--c-ink-soft);
 }
 
+.addLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  margin-top: var(--space-4);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-pill);
+  background: var(--c-card);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
