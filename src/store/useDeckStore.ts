@@ -20,6 +20,8 @@ export interface DeckActions {
   addEntry: (entry: WordEntry) => void;
   addEntries: (entries: readonly WordEntry[]) => void;
   selectDeck: (deckId: string) => void;
+  /** T14 import. The caller has already merged or replaced. */
+  setLibrary: (userEntries: readonly WordEntry[], userDecks: readonly Deck[]) => void;
 }
 
 export const DECK_STORAGE_KEY = 'svenska-kort:decks:v1';
@@ -50,6 +52,10 @@ export const useDeckStore = create<DeckState & DeckActions>()(
 
       selectDeck: (deckId) => {
         set({ selectedDeckId: deckId });
+      },
+
+      setLibrary: (userEntries, userDecks) => {
+        set({ userEntries: [...userEntries], userDecks: [...userDecks] });
       },
     }),
     {

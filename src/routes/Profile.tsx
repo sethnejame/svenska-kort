@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Avatar } from '../components/Avatar/Avatar';
+import { BackupPanel } from '../components/BackupPanel/BackupPanel';
 import { useGameStore } from '../store/useGameStore';
 import { randomSeeds } from '../lib/avatar';
 import { cx } from '../utils/cx';
@@ -116,6 +117,8 @@ export function Profile() {
           {firstRun ? 'Kör igång' : 'Spara'}
         </button>
       </form>
+
+      <BackupPanel />
     </main>
   );
 }

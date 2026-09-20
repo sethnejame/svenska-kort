@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router';
+import { BackupPanel } from '../components/BackupPanel/BackupPanel';
 import type { PartOfSpeech, WordEntry, WordForms } from '../types/word';
 import { asWordEntry, wordEntrySchema } from '../data/schema';
 import { ALL_ENTRIES } from '../data/decks';
@@ -971,6 +972,8 @@ export function Add() {
           </button>
         </form>
       )}
+
+      <BackupPanel />
     </main>
   );
 }

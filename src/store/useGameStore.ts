@@ -69,6 +69,12 @@ export interface GameActions {
   continue_: (now: number) => void;
   endSession: (now: number) => void;
   saveProfile: (displayName: string, avatarSeed: string, now: number) => void;
+  /** T14 import. The caller has already merged or replaced. */
+  setProgress: (progress: {
+    profile: Profile | null;
+    stats: Record<string, WordStat>;
+    sessionHistory: SessionResult[];
+  }) => void;
 }
 
 export const INITIAL_GAME_STATE: GameState = {
@@ -375,6 +381,20 @@ const createGame = (
         totalScore: state.totalScore,
         bestStreakEver: state.bestStreakEver,
       },
+    });
+  },
+
+  setProgress: ({ profile, stats, sessionHistory }) => {
+    // The run in progress is abandoned: its pool may name entries the imported
+    // library no longer has, and its score was earned against other stats.
+    set({
+      ...INITIAL_GAME_STATE,
+      rng: get().rng,
+      profile,
+      stats,
+      sessionHistory,
+      totalScore: profile?.totalScore ?? 0,
+      bestStreakEver: profile?.bestStreakEver ?? 0,
     });
   },
 });
