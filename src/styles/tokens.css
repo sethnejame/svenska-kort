@@ -1,0 +1,63 @@
+/* Design tokens. Nothing in this app hard-codes a color, radius, shadow or easing. */
+
+:root {
+  color-scheme: light;
+
+  --c-bg: #fff8f0;
+  --c-ink: #241c2e;
+  --c-ink-soft: #6b6076;
+  --c-card: #ffffff;
+  --c-primary: #6c4cf1;
+  --c-accent: #ffb627;
+  --c-correct: #1db87a;
+  --c-close: #f2a03d;
+  --c-wrong: #e5484d;
+  --c-swede: #4c7cf1;
+
+  --r-card: 28px;
+  --r-pill: 999px;
+
+  --shadow-card: 0 10px 30px -8px rgba(36, 28, 46, 0.28);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Derived surfaces. Kept here so components never mix their own alphas. */
+  --c-hairline: rgba(36, 28, 46, 0.12);
+  --c-sunken: rgba(36, 28, 46, 0.05);
+  --c-chip: rgba(108, 76, 241, 0.1);
+
+  --font-display: 'Fredoka', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --tap-min: 44px;
+  --focus-ring: 0 0 0 3px var(--c-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --c-bg: #17131e;
+    --c-ink: #f7f2ec;
+    --c-ink-soft: #b0a3bd;
+    --c-card: #261f31;
+    --c-primary: #a58cff;
+    --c-accent: #ffc658;
+    --c-correct: #47d49b;
+    --c-close: #f7b45f;
+    --c-wrong: #ff7a80;
+    --c-swede: #8aabff;
+
+    --shadow-card: 0 10px 30px -8px rgba(0, 0, 0, 0.6);
+
+    --c-hairline: rgba(247, 242, 236, 0.16);
+    --c-sunken: rgba(247, 242, 236, 0.07);
+    --c-chip: rgba(165, 140, 255, 0.18);
+  }
+}

@@ -1,0 +1,94 @@
+import js from '@eslint/js';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+
+export default tseslint.config(
+  { ignores: ['dist', 'coverage', 'node_modules', 'playwright-report', 'test-results'] },
+  js.configs.recommended,
+  {
+    files: ['**/*.js'],
+    languageOptions: { globals: globals.node },
+    extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
+    },
+  },
+  {
+    // src/lib is pure: no React, no DOM, no clock.
+    files: ['src/lib/**/*.ts'],
+    ignores: ['src/lib/**/*.test.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        { name: 'window', message: 'src/lib must stay framework-free and DOM-free.' },
+        { name: 'document', message: 'src/lib must stay framework-free and DOM-free.' },
+        { name: 'localStorage', message: 'src/lib must stay framework-free and DOM-free.' },
+      ],
+      'no-restricted-imports': ['error', { patterns: ['react', 'react-dom', 'zustand'] }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.object.name='Date'][callee.property.name='now']",
+          message: 'src/lib must take time as an argument, never read the clock.',
+        },
+        {
+          selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+          message: 'src/lib must take time as an argument, never read the clock.',
+        },
+      ],
+    },
+  },
+  {
+    // Only the storage module may touch localStorage.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/store/storage.ts', 'src/**/*.test.{ts,tsx}', 'src/test/**'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'localStorage',
+          message: 'Persistence goes through src/store/storage.ts, never localStorage directly.',
+        },
+        {
+          object: 'window',
+          property: 'localStorage',
+          message: 'Persistence goes through src/store/storage.ts, never localStorage directly.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.test.{ts,tsx}', 'src/test/**', 'scripts/**'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+    },
+  },
+  {
+    files: ['scripts/**/*.ts'],
+    languageOptions: { globals: globals.node },
+  },
+);
