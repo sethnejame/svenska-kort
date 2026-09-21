@@ -7,6 +7,7 @@ import { ScoreStrip } from '../components/ScoreStrip/ScoreStrip';
 import { useGameStore } from '../store/useGameStore';
 import { useDeckStore } from '../store/useDeckStore';
 import { getDeck, getEntry } from '../data/decks';
+import { scoreStore } from '../services/scoreStore';
 import { cx } from '../utils/cx';
 import styles from './Play.module.css';
 
@@ -45,6 +46,7 @@ export function Play() {
   const [canContinue, setCanContinue] = useState(false);
 
   const userEntries = useDeckStore((s) => s.userEntries);
+  const sessionHistory = useGameStore((s) => s.sessionHistory);
 
   const entry = currentId === null ? undefined : getEntry(currentId, userEntries);
   const deckName = getDeck(deckId)?.name ?? deckId;
@@ -82,6 +84,16 @@ export function Play() {
     inputRef.current?.focus();
     inputRef.current?.select();
   }, [status]);
+
+  // The run is already banked locally; this is what a remote board would need.
+  const lastSession = status === 'done' ? sessionHistory.at(-1) : undefined;
+  const lastSessionId = lastSession?.id;
+  useEffect(() => {
+    if (lastSession === undefined) return;
+    void scoreStore.submitSession(lastSession);
+    // Keyed on the id so a re-render cannot submit the same run twice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastSessionId]);
 
   const advance = useCallback(() => {
     continue_(Date.now());
@@ -147,7 +159,14 @@ export function Play() {
               <dd>{sessionScore}</dd>
             </div>
           </dl>
-          <Link to="/decks" className={cx(styles.action, styles.primary, styles.doneLink)} lang="sv">
+          <Link
+            to="/leaderboard"
+            className={cx(styles.action, styles.primary, styles.doneLink)}
+            lang="sv"
+          >
+            Se topplistan
+          </Link>
+          <Link to="/decks" className={cx(styles.action, styles.doneLink)} lang="sv">
             Välj en annan lek
           </Link>
         </div>
