@@ -30,6 +30,7 @@ function mastered(deckId: string, count: number): Record<string, WordStat> {
       wrong: 0,
       lastSeenAt: '',
       box: 4,
+      lastSeenSession: 0,
     };
   }
   return stats;
@@ -54,8 +55,12 @@ describe('Decks', () => {
       const tile = screen.getByText(deck.name).closest('a');
       expect(tile, deck.name).not.toBeNull();
       if (tile) {
+        // Nothing has been played, so every word is due and the counts agree.
         const count = entriesForDeck(deck.id).length;
-        expect(within(tile).getByText(`${String(count)} ord`), deck.name).toBeInTheDocument();
+        expect(
+          within(tile).getByText(`${String(count)} av ${String(count)} ord att öva nu`),
+          deck.name,
+        ).toBeInTheDocument();
       }
     }
   });
@@ -78,6 +83,31 @@ describe('Decks', () => {
     expect(tile).not.toBeNull();
     const count = entriesForDeck('fraser').length;
     if (tile) expect(within(tile).getByText(`2 av ${String(count)} kan du`)).toBeInTheDocument();
+  });
+
+  it('counts down to what the schedule has due, and says so when nothing is', () => {
+    const count = entriesForDeck('fraser').length;
+    // Two words answered correctly four sessions ago sit in box 4, resting
+    // eight sessions; the rest of the deck has never been seen.
+    useGameStore.setState({ stats: mastered('fraser', 2), sessionCount: 4 });
+    const { unmount } = renderDecks();
+
+    const tile = screen.getByText('Fraser').closest('a');
+    if (tile) {
+      expect(
+        within(tile).getByText(`${String(count - 2)} av ${String(count)} ord att öva nu`),
+      ).toBeInTheDocument();
+    }
+
+    unmount();
+    // The whole deck resting is a state the tile has to be able to say out loud.
+    useGameStore.setState({ stats: mastered('fraser', count), sessionCount: 4 });
+    renderDecks();
+
+    const rested = screen.getByText('Fraser').closest('a');
+    if (rested) {
+      expect(within(rested).getByText(`${String(count)} ord · allt repeterat`)).toBeInTheDocument();
+    }
   });
 
   it('routes to the deck that was tapped', async () => {

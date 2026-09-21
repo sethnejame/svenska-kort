@@ -10,6 +10,7 @@ import {
   withDefaults,
 } from './persisted';
 import { resetStorageForTests } from './storage';
+import { isDue } from '../lib/leitner';
 
 function write(value: unknown): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
@@ -26,6 +27,19 @@ function read(): StorageValue<PersistedGame> | null {
 }
 
 const STATS = {
+  'hej-phrase': {
+    entryId: 'hej-phrase',
+    seen: 3,
+    correct: 2,
+    wrong: 1,
+    lastSeenAt: '2026-09-20T00:00:00.000Z',
+    box: 3 as const,
+    lastSeenSession: 4,
+  },
+};
+
+/** The same stat as schema 1 wrote it, before the session counter existed. */
+const V1_STATS = {
   'hej-phrase': {
     entryId: 'hej-phrase',
     seen: 3,
@@ -50,6 +64,17 @@ describe('migrate', () => {
   it('passes a current-version blob through untouched', () => {
     const state = { schemaVersion: 1, stats: STATS, totalScore: 120 };
     expect(migrate(state, SCHEMA_VERSION)).toMatchObject(state);
+    expect(consumeRecoveryFlag()).toBe(false);
+  });
+
+  it('starts the session counter far enough in to make a v1 library due', () => {
+    const migrated = migrate({ stats: V1_STATS, totalScore: 120 }, 1);
+    const loaded = withDefaults(migrated);
+
+    // Nothing is lost, and every word a v1 learner had is askable at once.
+    expect(loaded.stats['hej-phrase']).toMatchObject({ seen: 3, box: 3, lastSeenSession: 0 });
+    expect(loaded.totalScore).toBe(120);
+    expect(isDue(loaded.stats['hej-phrase'], loaded.sessionCount + 1)).toBe(true);
     expect(consumeRecoveryFlag()).toBe(false);
   });
 
@@ -115,6 +140,7 @@ describe('withDefaults', () => {
     expect(withDefaults({})).toEqual({
       schemaVersion: SCHEMA_VERSION,
       stats: {},
+      sessionCount: 0,
       sessionHistory: [],
       profile: null,
       bestStreakEver: 0,

@@ -3,7 +3,7 @@ import type { LeitnerBox, WordStat } from '../types/progress';
 import { deckProgress, MASTERED_BOX } from './progress';
 
 function stat(entryId: string, box: LeitnerBox): WordStat {
-  return { entryId, seen: 1, correct: 1, wrong: 0, lastSeenAt: '', box };
+  return { entryId, seen: 1, correct: 1, wrong: 0, lastSeenAt: '', box, lastSeenSession: 0 };
 }
 
 const STATS: Record<string, WordStat> = {

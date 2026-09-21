@@ -30,6 +30,7 @@ const STAT: WordStat = {
   wrong: 1,
   lastSeenAt: '2026-09-10T00:00:00.000Z',
   box: 2,
+  lastSeenSession: 3,
 };
 
 const BACKUP_TEXT = JSON.stringify(

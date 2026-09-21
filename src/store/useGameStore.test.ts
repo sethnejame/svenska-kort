@@ -319,6 +319,73 @@ function fakeHistory(count: number): SessionResult[] {
   }));
 }
 
+describe('useGameStore scheduling', () => {
+  beforeEach(() => {
+    useGameStore.setState({ ...INITIAL_GAME_STATE, rng: () => 0.5 });
+  });
+
+  it('counts every run it starts', () => {
+    store().startSession('fraser', 0);
+    expect(store().sessionCount).toBe(1);
+
+    store().endSession(1000);
+    store().startSession('fraser', 2000);
+    expect(store().sessionCount).toBe(2);
+  });
+
+  it('does not count a resumed run twice', () => {
+    store().startSession('fraser', 0);
+    answerCorrectly(1000);
+    store().continue_(1100);
+
+    store().startSession('fraser', 1200);
+
+    expect(store().sessionCount).toBe(1);
+  });
+
+  it('leaves a word out of the next session until its box interval is up', () => {
+    store().startSession('fraser', 0);
+    const answeredId = current().id;
+    answerCorrectly(1000);
+    store().endSession(1500);
+
+    // Box 2 rests two sessions, so the next run skips it and the one after does not.
+    store().startSession('fraser', 2000);
+    expect(store().pool).not.toContain(answeredId);
+
+    store().endSession(2500);
+    store().startSession('fraser', 3000);
+    expect(store().pool).toContain(answeredId);
+  });
+
+  it('brings the whole deck back rather than offering nothing to practise', () => {
+    store().startSession('fraser', 0);
+    const size = store().pool.length;
+    // Every word in the deck answered, all of them now resting.
+    for (let card = 1; card <= size; card += 1) {
+      answerCorrectly(card * 1000);
+      store().continue_(card * 1000 + 100);
+    }
+    expect(store().status).toBe('done');
+
+    store().startSession('fraser', 999000);
+
+    expect(store().pool).toHaveLength(size);
+  });
+
+  it('keeps the stop-list on the whole deck, not just what is due', () => {
+    store().startSession('fraser', 0);
+    const full = store().allAnswers.size;
+    answerCorrectly(1000);
+    store().endSession(1500);
+
+    store().startSession('fraser', 2000);
+
+    expect(store().pool.length).toBeLessThan(FRASER_SIZE);
+    expect(store().allAnswers.size).toBe(full);
+  });
+});
+
 describe('useGameStore persistence', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -413,8 +480,9 @@ describe('useGameStore persistence', () => {
     store().startSession('fraser', 9000);
 
     expect(store().answered).toBe(0);
-    // A fresh run, so the whole deck is back in the pool.
-    expect(store().pool).toHaveLength(FRASER_SIZE);
+    // A fresh run: everything is back in the pool bar the card just answered,
+    // which the schedule is now resting.
+    expect(store().pool).toHaveLength(FRASER_SIZE - 1);
     expect(store().totalScore).toBeGreaterThan(0);
   });
 

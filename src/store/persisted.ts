@@ -1,9 +1,10 @@
 import type { PersistStorage, StorageValue } from 'zustand/middleware';
 import type { LeitnerBox, Profile, SessionResult, WordStat } from '../types/progress';
+import { MAX_INTERVAL } from '../lib/leitner';
 import { getItem, removeItem, setItem } from './storage';
 
 export const STORAGE_KEY = 'svenska-kort:v1';
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export const MAX_SESSION_HISTORY = 50;
 
 /**
@@ -53,13 +54,17 @@ const objectOf =
 const isLeitnerBox = (value: unknown): value is LeitnerBox =>
   value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
 
-const isWordStat = objectOf<WordStat>({
+/** Schema 1 wrote no `lastSeenSession`, so a stored stat may still lack one. */
+type StoredWordStat = Omit<WordStat, 'lastSeenSession'> & { lastSeenSession?: number | undefined };
+
+const isWordStat = objectOf<StoredWordStat>({
   entryId: isString,
   seen: isNumber,
   correct: isNumber,
   wrong: isNumber,
   lastSeenAt: isString,
   box: isLeitnerBox,
+  lastSeenSession: optional(isNumber),
 });
 
 const isSessionResult = objectOf<SessionResult>({
@@ -88,7 +93,8 @@ const isProfile = objectOf<Profile>({
  */
 interface KnownFields {
   schemaVersion?: number | undefined;
-  stats?: Record<string, WordStat> | undefined;
+  stats?: Record<string, StoredWordStat> | undefined;
+  sessionCount?: number | undefined;
   sessionHistory?: SessionResult[] | undefined;
   profile?: Profile | null | undefined;
   bestStreakEver?: number | undefined;
@@ -110,6 +116,7 @@ export type PersistedState = KnownFields & Record<string, unknown>;
 const isKnownFields = objectOf<KnownFields>({
   schemaVersion: optional(isNumber),
   stats: optional(recordOf(isWordStat)),
+  sessionCount: optional(isNumber),
   sessionHistory: optional(arrayOf(isSessionResult)),
   profile: optional(nullable(isProfile)),
   bestStreakEver: optional(isNumber),
@@ -128,6 +135,7 @@ const isKnownFields = objectOf<KnownFields>({
 export interface PersistedGame {
   schemaVersion: number;
   stats: Record<string, WordStat>;
+  sessionCount: number;
   sessionHistory: SessionResult[];
   profile: Profile | null;
   bestStreakEver: number;
@@ -167,6 +175,13 @@ export function migrate(persisted: unknown, version: number): PersistedState {
   switch (version) {
     case SCHEMA_VERSION:
       return persisted;
+    case 1:
+      // Version 1 kept no session counter, so every word it stored reads as
+      // last seen in session 0. Starting the counter a full interval in makes
+      // the whole existing library due at once: the first session after the
+      // upgrade behaves exactly as it did before, and the schedule starts from
+      // there rather than locking a learner out of words they already know.
+      return { ...persisted, sessionCount: MAX_INTERVAL };
     default:
       if (version > SCHEMA_VERSION && !warnedAboutFutureVersion) {
         warnedAboutFutureVersion = true;
@@ -180,11 +195,22 @@ export function migrate(persisted: unknown, version: number): PersistedState {
   }
 }
 
+function statsWithDefaults(
+  stats: Readonly<Record<string, StoredWordStat>>,
+): Record<string, WordStat> {
+  const filled: Record<string, WordStat> = {};
+  for (const [entryId, stat] of Object.entries(stats)) {
+    filled[entryId] = { ...stat, lastSeenSession: stat.lastSeenSession ?? 0 };
+  }
+  return filled;
+}
+
 /** Fills in whatever the stored blob did not carry. */
 export function withDefaults(persisted: PersistedState): PersistedGame {
   return {
     schemaVersion: SCHEMA_VERSION,
-    stats: persisted.stats ?? {},
+    stats: statsWithDefaults(persisted.stats ?? {}),
+    sessionCount: persisted.sessionCount ?? 0,
     sessionHistory: persisted.sessionHistory ?? [],
     profile: persisted.profile ?? null,
     bestStreakEver: persisted.bestStreakEver ?? 0,

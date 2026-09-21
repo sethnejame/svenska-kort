@@ -35,6 +35,9 @@ const wordStatSchema = z.object({
   wrong: z.number().int().nonnegative(),
   lastSeenAt: z.string(),
   box: leitnerBoxSchema,
+  // Absent in files exported before the Leitner schedule was turned on. Those
+  // words read as last seen in session 0, which makes them due on arrival.
+  lastSeenSession: z.number().int().nonnegative().default(0),
 });
 
 const sessionResultSchema = z.object({
@@ -186,6 +189,7 @@ function mergeStat(current: WordStat, incoming: WordStat): WordStat {
     wrong: current.wrong + incoming.wrong,
     lastSeenAt: latest.lastSeenAt,
     box: latest.box,
+    lastSeenSession: Math.max(current.lastSeenSession, incoming.lastSeenSession),
   };
 }
 

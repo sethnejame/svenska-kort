@@ -6,7 +6,7 @@ import type { AnswerVerdict, Verdict } from '../lib/checkAnswer';
 import { checkAnswer, collectAllAnswers } from '../lib/checkAnswer';
 import { pointsFor } from '../lib/scoring';
 import { selectNext } from '../lib/selectNext';
-import { nextBox } from '../lib/leitner';
+import { dueEntries, nextBox } from '../lib/leitner';
 import { entriesForDeck, getEntry } from '../data/decks';
 import { useDeckStore } from './useDeckStore';
 import {
@@ -52,6 +52,8 @@ export interface GameState {
 
   // Career state: survives a session, and is what actually gets persisted.
   schemaVersion: number;
+  /** Runs started, ever. The clock the Leitner schedule counts intervals in. */
+  sessionCount: number;
   sessionHistory: SessionResult[];
   profile: Profile | null;
   bestStreakEver: number;
@@ -102,6 +104,7 @@ export const INITIAL_GAME_STATE: GameState = {
   allAnswers: new Set<string>(),
   rng: Math.random,
   schemaVersion: SCHEMA_VERSION,
+  sessionCount: 0,
   sessionHistory: [],
   profile: null,
   bestStreakEver: 0,
@@ -114,6 +117,7 @@ function career(state: GameState) {
   return {
     rng: state.rng,
     stats: state.stats,
+    sessionCount: state.sessionCount,
     sessionHistory: state.sessionHistory,
     profile: state.profile,
     bestStreakEver: state.bestStreakEver,
@@ -146,6 +150,7 @@ function bumpStat(
   entryId: string,
   verdict: Verdict,
   now: number,
+  session: number,
 ): Record<string, WordStat> {
   const previous = stats[entryId];
   const base: WordStat = previous ?? {
@@ -155,6 +160,7 @@ function bumpStat(
     wrong: 0,
     lastSeenAt: '',
     box: 1,
+    lastSeenSession: 0,
   };
 
   return {
@@ -166,6 +172,7 @@ function bumpStat(
       wrong: base.wrong + (verdict === 'wrong' ? 1 : 0),
       lastSeenAt: new Date(now).toISOString(),
       box: nextBox(base.box, verdict),
+      lastSeenSession: session,
     },
   };
 }
@@ -225,7 +232,7 @@ function resolveCard(state: GameState, verdict: Verdict, now: number): Partial<G
     pool: state.pool.filter((id) => id !== entryId),
     answered: state.answered + 1,
     correct: state.correct + (verdict === 'correct' ? 1 : 0),
-    stats: bumpStat(state.stats, entryId, verdict, now),
+    stats: bumpStat(state.stats, entryId, verdict, now, state.sessionCount),
   };
 }
 
@@ -254,11 +261,21 @@ const createGame = (
     // than when the Play route unmounts — a remount must not cost a session.
     const previous = unfinished ? { ...state, ...finishSession(state, now) } : state;
 
+    const session = previous.sessionCount + 1;
+    // The Leitner schedule decides what a session asks about. When everything
+    // is resting the whole deck comes back instead: a learner who opens the app
+    // wanting to practise is never told to come back in four sessions.
+    const due = dueEntries(entries, previous.stats, session);
+    const scheduled = due.length > 0 ? due : entries;
+
     const base: GameState = {
       ...INITIAL_GAME_STATE,
       ...career(previous),
+      sessionCount: session,
       deckId,
-      pool: entries.map((entry) => entry.id),
+      pool: scheduled.map((entry) => entry.id),
+      // The stop-list stays the whole deck, not just what is due — `increased`
+      // must read as wrong for `minskade` whether or not it is scheduled today.
       allAnswers: collectAllAnswers(entries),
       startedAt: now,
     };
@@ -394,6 +411,13 @@ const createGame = (
       rng: get().rng,
       profile,
       stats,
+      // An imported library counts its intervals in the other device's
+      // sessions. Taking the highest keeps those words resting rather than
+      // making the whole import due the moment it lands.
+      sessionCount: Math.max(
+        get().sessionCount,
+        ...Object.values(stats).map((stat) => stat.lastSeenSession),
+      ),
       sessionHistory,
       totalScore: profile?.totalScore ?? 0,
       bestStreakEver: profile?.bestStreakEver ?? 0,
@@ -415,6 +439,7 @@ export const useGameStore = create<GameState & GameActions>()(
     partialize: (state) => ({
       schemaVersion: SCHEMA_VERSION,
       stats: state.stats,
+      sessionCount: state.sessionCount,
       sessionHistory: state.sessionHistory,
       profile: state.profile,
       bestStreakEver: state.bestStreakEver,

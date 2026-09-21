@@ -4,6 +4,7 @@ import { Avatar } from '../components/Avatar/Avatar';
 import { allDecks, useDeckStore } from '../store/useDeckStore';
 import { useGameStore } from '../store/useGameStore';
 import { deckProgress } from '../lib/progress';
+import { dueCount } from '../lib/leitner';
 import styles from './Decks.module.css';
 
 export function Decks() {
@@ -12,8 +13,12 @@ export function Decks() {
   const selectDeck = useDeckStore((s) => s.selectDeck);
   const stats = useGameStore((s) => s.stats);
   const profile = useGameStore((s) => s.profile);
+  const sessionCount = useGameStore((s) => s.sessionCount);
 
   const decks = allDecks(userDecks, userEntries);
+  // Tapping a tile starts the next session, so that is the session the
+  // schedule is counted against.
+  const nextSession = sessionCount + 1;
 
   return (
     <main className={styles.screen}>
@@ -32,6 +37,7 @@ export function Decks() {
       <ul className={styles.grid}>
         {decks.map((deck) => {
           const progress = deckProgress(deck.entryIds, stats);
+          const due = dueCount(deck.entryIds, stats, nextSession);
           return (
             <li key={deck.id}>
               <Link
@@ -47,7 +53,9 @@ export function Decks() {
                   </span>
                   <span className={styles.deckDescription}>{deck.description}</span>
                   <span className={styles.deckCount} lang="sv">
-                    {`${progress.total} ord`}
+                    {due > 0
+                      ? `${due} av ${progress.total} ord att öva nu`
+                      : `${progress.total} ord · allt repeterat`}
                   </span>
                 </div>
                 <ProgressRing mastered={progress.mastered} total={progress.total} />

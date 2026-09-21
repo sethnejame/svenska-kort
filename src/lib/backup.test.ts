@@ -45,6 +45,7 @@ function stat(over: Partial<WordStat> = {}): WordStat {
     wrong: 1,
     lastSeenAt: '2026-09-10T00:00:00.000Z',
     box: 2,
+    lastSeenSession: 3,
     ...over,
   };
 }
@@ -158,6 +159,17 @@ describe('readBackup', () => {
     expect(result.ok ? '' : result.error).toMatch(/^Fel i exportedAt:/);
   });
 
+  it('takes a file exported before the schedule existed', () => {
+    const backup = buildBackup(FULL, 0) as unknown as { stats: Record<string, unknown> };
+    const old = { ...stat() } as Partial<WordStat>;
+    delete old.lastSeenSession;
+    backup.stats = { 'regering-noun': old };
+
+    const result = readBackup(JSON.stringify(backup));
+    // Session 0 is the oldest there is, so the word arrives due.
+    expect(result.ok && result.backup.stats['regering-noun']?.lastSeenSession).toBe(0);
+  });
+
   it('reports a whole-file shape problem with no path to point at', () => {
     const result = readBackup('42');
     expect(result.ok ? '' : result.error).toMatch(/^Filen har fel format: /);
@@ -200,7 +212,13 @@ describe('mergeBackup', () => {
     });
     const incoming = roundTrip(
       contents({
-        stats: { 'regering-noun': stat({ lastSeenAt: '2026-09-15T00:00:00.000Z', box: 1 }) },
+        stats: {
+          'regering-noun': stat({
+            lastSeenAt: '2026-09-15T00:00:00.000Z',
+            box: 1,
+            lastSeenSession: 9,
+          }),
+        },
       }),
     );
 
@@ -211,6 +229,9 @@ describe('mergeBackup', () => {
       wrong: 1,
       lastSeenAt: '2026-09-15T00:00:00.000Z',
       box: 1,
+      // The higher session count wins, so a word does not come round early
+      // just because the two devices counted a different number of runs.
+      lastSeenSession: 9,
     });
   });
 

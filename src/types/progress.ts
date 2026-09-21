@@ -16,6 +16,8 @@ export interface WordStat {
   wrong: number;
   lastSeenAt: string; // ISO
   box: LeitnerBox;
+  /** Session number this word was last answered in, for the Leitner schedule. */
+  lastSeenSession: number;
 }
 
 export interface SessionResult {

@@ -13,7 +13,15 @@ function pool(size: number): WordEntry[] {
 }
 
 function stat(entryId: string, seen: number, wrong: number): WordStat {
-  return { entryId, seen, correct: seen - wrong, wrong, lastSeenAt: '2026-09-20T00:00:00Z', box: 1 };
+  return {
+    entryId,
+    seen,
+    correct: seen - wrong,
+    wrong,
+    lastSeenAt: '2026-09-20T00:00:00Z',
+    box: 1,
+    lastSeenSession: 0,
+  };
 }
 
 /** Mulberry32 — a small seeded PRNG so the draws are identical across runs. */
