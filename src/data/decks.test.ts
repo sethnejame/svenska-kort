@@ -3,14 +3,18 @@ import { ALL_ENTRIES, BUILTIN_DECKS, entriesForDeck, getDeck, getEntry } from '.
 import { entriesFileSchema } from './schema';
 
 describe('seed entries', () => {
-  it('ships 72 entries that satisfy the schema', () => {
-    expect(ALL_ENTRIES).toHaveLength(72);
+  it('ships a full deck of entries that satisfy the schema', () => {
+    // A floor rather than an exact count: vocabulary is added over time and a
+    // frozen number would fail on every addition without catching a real bug.
+    expect(ALL_ENTRIES.length).toBeGreaterThanOrEqual(600);
     expect(entriesFileSchema.safeParse(ALL_ENTRIES).success).toBe(true);
   });
 
-  it('gives every noun a gender and all four forms', () => {
+  // Month names are tagged as nouns but carry 'none': "mars" has no article and
+  // no plural in use, so an inflection table would be inventing forms.
+  it('gives every declinable noun a gender and all four forms', () => {
     for (const entry of ALL_ENTRIES.filter((e) => e.pos === 'noun')) {
-      expect(entry.forms?.kind, entry.id).toBe('noun');
+      expect(entry.forms?.kind, entry.id).toMatch(/^(noun|none)$/);
       if (entry.forms?.kind !== 'noun') continue;
       expect(entry.forms.gender, entry.id).toMatch(/^(en|ett)$/);
       expect(entry.forms.indefSg, entry.id).not.toBe('');
@@ -51,16 +55,16 @@ describe('seed entries', () => {
 });
 
 describe('entriesForDeck', () => {
-  it.each([
-    ['nyheter', 41],
-    ['vardag', 24],
-    ['verb', 22],
-    ['skola', 15],
-    ['fraser', 6],
-    ['alla', 72],
-  ])('%s holds %i entries', (deckId, count) => {
-    expect(entriesForDeck(deckId)).toHaveLength(count);
-  });
+  it.each(BUILTIN_DECKS.map((deck) => [deck.id, deck.tag] as const))(
+    '%s holds exactly the entries carrying its tag',
+    (deckId, tag) => {
+      const expected =
+        tag === null ? ALL_ENTRIES : ALL_ENTRIES.filter((e) => e.tags?.includes(tag));
+      expect(entriesForDeck(deckId)).toEqual(expected);
+      // A deck nobody can play is a data bug, so the floor is part of the assertion.
+      expect(expected.length, deckId).toBeGreaterThan(0);
+    },
+  );
 
   it('returns nothing for an unknown deck', () => {
     expect(entriesForDeck('inte-en-lek')).toEqual([]);

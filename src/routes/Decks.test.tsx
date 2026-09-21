@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { WordStat } from '../types/progress';
-import { entriesForDeck } from '../data/decks';
+import { BUILTIN_DECKS, entriesForDeck } from '../data/decks';
 import { INITIAL_GAME_STATE, useGameStore } from '../store/useGameStore';
 import { INITIAL_DECK_STATE, useDeckStore } from '../store/useDeckStore';
 import { Decks } from './Decks';
@@ -46,34 +46,38 @@ describe('Decks', () => {
 
     // Every link bar the one down to `/add`.
     const tiles = screen.getAllByRole('link').filter((link) => link.textContent !== 'Lägg till ord');
-    expect(tiles).toHaveLength(6);
+    expect(tiles).toHaveLength(BUILTIN_DECKS.length);
 
-    const expected: [string, number][] = [
-      ['Nyheter och samhälle', 41],
-      ['Skola och språk', 15],
-      ['Vardag', 24],
-      ['Fraser', 6],
-      ['Verb i text', 22],
-      ['Alla ord', 72],
-    ];
-
-    for (const [name, count] of expected) {
-      const tile = screen.getByText(name).closest('a');
-      expect(tile, name).not.toBeNull();
-      if (tile) expect(within(tile).getByText(`${count} ord`)).toBeInTheDocument();
+    // Counts are read off the data rather than written out, so adding vocabulary
+    // does not turn this into a list of numbers to hand-edit.
+    for (const deck of BUILTIN_DECKS) {
+      const tile = screen.getByText(deck.name).closest('a');
+      expect(tile, deck.name).not.toBeNull();
+      if (tile) {
+        const count = entriesForDeck(deck.id).length;
+        expect(within(tile).getByText(`${String(count)} ord`), deck.name).toBeInTheDocument();
+      }
     }
   });
 
   it('starts every deck at zero mastered', () => {
     renderDecks();
-    expect(screen.getAllByText('0 av 6 kan du')).toHaveLength(1);
+    for (const deck of BUILTIN_DECKS) {
+      const tile = screen.getByText(deck.name).closest('a');
+      expect(tile, deck.name).not.toBeNull();
+      const count = entriesForDeck(deck.id).length;
+      if (tile) expect(within(tile).getByText(`0 av ${String(count)} kan du`)).toBeInTheDocument();
+    }
   });
 
   it('moves the ring once words reach box 4', () => {
     useGameStore.setState({ stats: mastered('fraser', 2) });
     renderDecks();
 
-    expect(screen.getByText('2 av 6 kan du')).toBeInTheDocument();
+    const tile = screen.getByText('Fraser').closest('a');
+    expect(tile).not.toBeNull();
+    const count = entriesForDeck('fraser').length;
+    if (tile) expect(within(tile).getByText(`2 av ${String(count)} kan du`)).toBeInTheDocument();
   });
 
   it('routes to the deck that was tapped', async () => {

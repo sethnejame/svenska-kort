@@ -64,31 +64,31 @@ describe('Add', () => {
     const user = userEvent.setup();
     renderAdd();
 
-    await fillMinimum(user, 'kylskåp');
+    await fillMinimum(user, 'dammsugare');
     await user.click(screen.getByRole('button', { name: 'Spara ordet' }));
 
     const entries = useDeckStore.getState().userEntries;
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ id: 'kylskap-noun', swedish: 'kylskåp', english: ['thing'] });
-    expect(screen.getByRole('status')).toHaveTextContent('kylskåp är sparat.');
+    expect(entries[0]).toMatchObject({ id: 'dammsugare-noun', swedish: 'dammsugare', english: ['thing'] });
+    expect(screen.getByRole('status')).toHaveTextContent('dammsugare är sparat.');
   });
 
   it('puts the saved word in the alla deck for the next session', async () => {
     const user = userEvent.setup();
     renderAdd();
 
-    await fillMinimum(user, 'kylskåp');
+    await fillMinimum(user, 'dammsugare');
     await user.click(screen.getByRole('button', { name: 'Spara ordet' }));
 
     const ids = entriesForDeck('alla', useDeckStore.getState().userEntries).map((e) => e.id);
-    expect(ids).toContain('kylskap-noun');
+    expect(ids).toContain('dammsugare-noun');
   });
 
   it('blocks a save with no english and says so on the field', async () => {
     const user = userEvent.setup();
     renderAdd();
 
-    await user.type(screen.getByLabelText('Svenska'), 'kylskåp');
+    await user.type(screen.getByLabelText('Svenska'), 'dammsugare');
     await user.click(screen.getByRole('button', { name: 'Spara ordet' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('minst en engelsk översättning');
@@ -117,7 +117,7 @@ describe('Add', () => {
     const chip = screen.getByRole('button', { name: /^fridge/ });
     await user.click(chip);
 
-    await user.type(screen.getByLabelText('Svenska'), 'kylskåp');
+    await user.type(screen.getByLabelText('Svenska'), 'dammsugare');
     await user.click(screen.getByRole('button', { name: 'Spara ordet' }));
 
     expect(useDeckStore.getState().userEntries[0]?.english).toEqual(['icebox']);
@@ -235,7 +235,7 @@ describe('Add', () => {
     const user = userEvent.setup();
     renderAdd();
 
-    await fillMinimum(user, 'kylskåp');
+    await fillMinimum(user, 'dammsugare');
     await user.click(screen.getByRole('button', { name: 'Spara ordet' }));
 
     expect(screen.getByLabelText('Svenska')).toHaveValue('');
@@ -330,20 +330,20 @@ describe('Add', () => {
     const user = userEvent.setup();
     renderAdd();
 
-    await fillMinimum(user, 'kylskåpen');
-    await user.type(screen.getByLabelText('Grundform (om ordet är böjt)'), 'kylskåp');
-    await user.type(screen.getByLabelText('Exempel på svenska'), 'Kylskåpen är tomma.');
-    await user.type(screen.getByLabelText('Exempel på engelska'), 'The fridges are empty.');
+    await fillMinimum(user, 'dammsugarna');
+    await user.type(screen.getByLabelText('Grundform (om ordet är böjt)'), 'dammsugare');
+    await user.type(screen.getByLabelText('Exempel på svenska'), 'Dammsugarna är trasiga.');
+    await user.type(screen.getByLabelText('Exempel på engelska'), 'The vacuum cleaners are broken.');
     await user.type(screen.getByLabelText('Anteckning'), 'Plural bestämd form.');
     await user.type(screen.getByLabelText('Etiketter'), 'news{Enter}');
     await user.selectOptions(screen.getByLabelText('Nivå'), '2');
     await user.click(screen.getByRole('button', { name: 'Spara ordet' }));
 
     expect(useDeckStore.getState().userEntries[0]).toMatchObject({
-      id: 'kylskap-noun',
-      swedish: 'kylskåpen',
-      lemma: 'kylskåp',
-      example: { sv: 'Kylskåpen är tomma.', en: 'The fridges are empty.' },
+      id: 'dammsugare-noun',
+      swedish: 'dammsugarna',
+      lemma: 'dammsugare',
+      example: { sv: 'Dammsugarna är trasiga.', en: 'The vacuum cleaners are broken.' },
       note: 'Plural bestämd form.',
       tags: ['news'],
       level: 2,

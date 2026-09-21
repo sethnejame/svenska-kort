@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Deck } from '../types/progress';
 import type { WordEntry } from '../types/word';
+import { ALL_ENTRIES, BUILTIN_DECKS } from '../data/decks';
 import { allDecks, BUILTIN_DECK_LIST, INITIAL_DECK_STATE, useDeckStore } from './useDeckStore';
 
 const userDeck: Deck = {
@@ -13,9 +14,9 @@ const userDeck: Deck = {
 };
 
 const added: WordEntry = {
-  id: 'kylskap-noun',
-  swedish: 'kylskåp',
-  english: ['fridge'],
+  id: 'dammsugare-noun',
+  swedish: 'dammsugare',
+  english: ['vacuum cleaner'],
   pos: 'noun',
   tags: ['everyday'],
 };
@@ -26,10 +27,10 @@ describe('useDeckStore', () => {
   });
 
   it('resolves every builtin deck to its entry ids up front', () => {
-    expect(BUILTIN_DECK_LIST).toHaveLength(6);
+    expect(BUILTIN_DECK_LIST).toHaveLength(BUILTIN_DECKS.length);
 
     const alla = BUILTIN_DECK_LIST.find((deck) => deck.id === 'alla');
-    expect(alla?.entryIds).toHaveLength(72);
+    expect(alla?.entryIds).toHaveLength(ALL_ENTRIES.length);
     expect(alla?.source).toBe('builtin');
   });
 
@@ -51,14 +52,14 @@ describe('useDeckStore', () => {
     useDeckStore.getState().addEntry(second);
 
     expect(useDeckStore.getState().userEntries.map((entry) => entry.id)).toEqual([
-      'kylskap-noun',
+      'dammsugare-noun',
       'spis-noun',
     ]);
   });
 
   it('lists builtin decks before the learner’s own', () => {
     const decks = allDecks([userDeck]);
-    expect(decks).toHaveLength(7);
+    expect(decks).toHaveLength(BUILTIN_DECKS.length + 1);
     expect(decks.at(-1)).toBe(userDeck);
   });
 
@@ -69,9 +70,9 @@ describe('useDeckStore', () => {
     const vardag = decks.find((deck) => deck.id === 'vardag');
     const skola = decks.find((deck) => deck.id === 'skola');
 
-    expect(alla?.entryIds).toContain('kylskap-noun');
-    expect(vardag?.entryIds).toContain('kylskap-noun');
-    expect(skola?.entryIds).not.toContain('kylskap-noun');
+    expect(alla?.entryIds).toContain('dammsugare-noun');
+    expect(vardag?.entryIds).toContain('dammsugare-noun');
+    expect(skola?.entryIds).not.toContain('dammsugare-noun');
   });
 
   it('leaves an untagged word in alla only', () => {

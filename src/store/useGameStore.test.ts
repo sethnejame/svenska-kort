@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WordEntry } from '../types/word';
 import type { SessionResult } from '../types/progress';
-import { getEntry } from '../data/decks';
+import { entriesForDeck, getEntry } from '../data/decks';
 import { consumeRecoveryFlag, MAX_SESSION_HISTORY, STORAGE_KEY } from './persisted';
 import { resetStorageForTests } from './storage';
 import { INITIAL_GAME_STATE, useGameStore } from './useGameStore';
@@ -42,6 +42,19 @@ function answerCorrectly(now: number): void {
 /** A string that matches nothing: too far for fuzzy, not a substring of anything. */
 const NONSENSE = 'qqqqqqqqq';
 
+const FRASER_SIZE = entriesForDeck('fraser').length;
+
+/**
+ * `fraser` holds every phrase in the app, which is far more cards than a test
+ * wants to type through. Trimming the pool keeps the already-drawn card so
+ * `currentId` stays valid, and keeps these tests off the deck's real size.
+ */
+function trimPoolTo(size: number): void {
+  const { currentId, pool } = store();
+  const ordered = [...pool].sort((a) => (a === currentId ? -1 : 0));
+  useGameStore.setState({ pool: ordered.slice(0, size) });
+}
+
 describe('useGameStore', () => {
   beforeEach(() => {
     // A full reset, not just the rng: the store now resumes an unfinished run,
@@ -54,16 +67,13 @@ describe('useGameStore', () => {
     const state = store();
     expect(state.status).toBe('prompt');
     expect(state.currentId).not.toBeNull();
-    expect(state.pool).toHaveLength(6);
+    expect(state.pool).toHaveLength(FRASER_SIZE);
     expect(state.allAnswers.has('everyone')).toBe(true);
     expect(state.startedAt).toBe(0);
   });
 
   it('drives a five-card deck from start to finish with no React', () => {
-    // Trim to five, keeping the already-drawn card so the count stays exact.
-    const { currentId, pool } = store();
-    const ordered = [...pool].sort((a) => (a === currentId ? -1 : 0));
-    useGameStore.setState({ pool: ordered.slice(0, 5) });
+    trimPoolTo(5);
 
     for (let card = 1; card <= 5; card += 1) {
       expect(store().status).toBe('prompt');
@@ -211,6 +221,7 @@ describe('useGameStore', () => {
   });
 
   it('reaches done exactly once and stops advancing', () => {
+    trimPoolTo(6);
     for (let card = 1; card <= 6; card += 1) {
       answerCorrectly(card * 1000);
       store().continue_(card * 1000 + 100);
@@ -322,6 +333,7 @@ describe('useGameStore persistence', () => {
 
   it('resumes a mid-session run with stats, streak, score and best-ever intact', () => {
     store().startSession('fraser', 0);
+    trimPoolTo(6);
 
     const seen: string[] = [];
     for (let card = 1; card <= 5; card += 1) {
@@ -401,12 +413,14 @@ describe('useGameStore persistence', () => {
     store().startSession('fraser', 9000);
 
     expect(store().answered).toBe(0);
-    expect(store().pool).toHaveLength(6);
+    // A fresh run, so the whole deck is back in the pool.
+    expect(store().pool).toHaveLength(FRASER_SIZE);
     expect(store().totalScore).toBeGreaterThan(0);
   });
 
   it('banks the session into history and the career total when it finishes', () => {
     store().startSession('fraser', 0);
+    trimPoolTo(6);
     for (let card = 1; card <= 6; card += 1) {
       answerCorrectly(card * 1000);
       store().continue_(card * 1000 + 100);
@@ -451,8 +465,12 @@ describe('useGameStore persistence', () => {
   it('moves the leitner box up on correct, holds on close, resets on wrong', () => {
     store().startSession('fraser', 0);
 
+    // Pinned rather than whatever the deck draws: the close tier is a ratio, so a
+    // one-character typo only lands there on an answer of a few words.
+    const id = 'trevligt-att-traffas-phrase';
+    useGameStore.setState({ pool: [id], currentId: id, status: 'prompt', retryUsed: false });
+
     // Correct twice on the same entry: box 1 → 2 → 3.
-    const id = current().id;
     answerCorrectly(1000);
     expect(store().stats[id]?.box).toBe(2);
 
