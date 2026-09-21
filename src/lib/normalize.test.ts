@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alternates, normalize } from './normalize';
+import { alternates, foldSwedish, normalize, normalizeSwedish } from './normalize';
 
 describe('normalize', () => {
   it('trims, collapses whitespace and lowercases', () => {
@@ -43,6 +43,38 @@ describe('normalize', () => {
 
   it('keeps a bare article as a word rather than emptying it', () => {
     expect(normalize('the ')).toBe('the');
+  });
+});
+
+describe('normalizeSwedish', () => {
+  it('tidies case, spacing and a trailing question mark', () => {
+    expect(normalizeSwedish('  Hur Mår   Du?  ')).toBe('hur mår du');
+  });
+
+  it('leaves the article where it is', () => {
+    // `en` and `ett` carry the gender, and `att` is part of the infinitive, so
+    // dropping either would throw away the thing being learnt.
+    expect(normalizeSwedish('en bil')).toBe('en bil');
+    expect(normalizeSwedish('att begrava')).toBe('att begrava');
+  });
+
+  it('keeps every Swedish letter intact', () => {
+    expect(normalizeSwedish('Språket')).toBe('språket');
+  });
+});
+
+describe('foldSwedish', () => {
+  it('flattens the three Swedish vowels onto keys every keyboard has', () => {
+    expect(foldSwedish('åäö')).toBe('aao');
+    expect(foldSwedish('språket')).toBe('spraket');
+  });
+
+  it('flattens an acute accent too', () => {
+    expect(foldSwedish('idé')).toBe('ide');
+  });
+
+  it('leaves a word with nothing to fold alone', () => {
+    expect(foldSwedish('hus')).toBe('hus');
   });
 });
 

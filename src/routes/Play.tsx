@@ -33,6 +33,7 @@ export function Play() {
   const sessionScore = useGameStore((s) => s.sessionScore);
   const answered = useGameStore((s) => s.answered);
   const correct = useGameStore((s) => s.correct);
+  const reverse = useGameStore((s) => s.reverse);
 
   const startSession = useGameStore((s) => s.startSession);
   const setInput = useGameStore((s) => s.setInput);
@@ -53,7 +54,8 @@ export function Play() {
   const deckName = deckDisplayName(deckId);
   // The diff compares against the answer that actually matched, not the whole
   // comma-joined list, or every alternative would show up as a difference.
-  const answer = lastVerdict?.matched ?? entry?.english[0] ?? '';
+  const expected = reverse ? entry?.swedish : entry?.english[0];
+  const answer = lastVerdict?.matched ?? expected ?? '';
 
   // No cleanup that ends the session: StrictMode remounts this effect, and an
   // unmount must never cost a run. `startSession` banks an abandoned one.
@@ -200,7 +202,9 @@ export function Play() {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
       >
-        {entry && <Card entry={entry} flipped={flipped} onFlip={handleFlip} />}
+        {entry && (
+          <Card entry={entry} flipped={flipped} onFlip={handleFlip} reverse={reverse} />
+        )}
       </div>
 
       <AnswerInput
@@ -211,6 +215,7 @@ export function Play() {
         verdict={lastVerdict?.verdict}
         answer={answer}
         submitted={input}
+        reverse={reverse}
       />
 
       {status === 'revealed' ? (

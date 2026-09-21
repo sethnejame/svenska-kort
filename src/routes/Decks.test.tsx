@@ -177,6 +177,32 @@ describe('Decks', () => {
     expect(screen.queryByText(/Du har inga egna ord än/)).not.toBeInTheDocument();
   });
 
+  it('starts out asking for English and names both directions', () => {
+    renderDecks();
+
+    expect(screen.getByRole('button', { name: 'Svenska → engelska' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Engelska → svenska' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('switches the direction the next session is played in', async () => {
+    const user = userEvent.setup();
+    renderDecks();
+
+    await user.click(screen.getByRole('button', { name: 'Engelska → svenska' }));
+
+    expect(useGameStore.getState().reverse).toBe(true);
+    expect(screen.getByRole('button', { name: 'Engelska → svenska' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
   it('hides the profile link until a profile exists', () => {
     renderDecks();
     expect(screen.queryByText(/^Profil: /)).not.toBeInTheDocument();

@@ -104,6 +104,21 @@ describe('Card', () => {
     );
   });
 
+  it('leads with the English and names it in the label when reversed', () => {
+    render(<Card entry={seed('regering-noun')} flipped={false} onFlip={vi.fn()} reverse />);
+
+    expect(screen.getByRole('button', { name: /^the government/ })).toBeInTheDocument();
+  });
+
+  it('keeps the Swedish and its forms table together on the other face', () => {
+    render(<Card entry={seed('regering-noun')} flipped reverse />);
+
+    expect(screen.getByText('regeringen', { selector: 'span[lang="sv"]' })).toBeInTheDocument();
+    // The forms follow the Swedish rather than staying put on the back.
+    expect(screen.getByText('regeringarna')).toBeInTheDocument();
+    expect(screen.getByText('substantiv')).toBeInTheDocument();
+  });
+
   it('is not a button when it cannot be flipped', () => {
     render(<Card entry={seed('regering-noun')} flipped={false} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();

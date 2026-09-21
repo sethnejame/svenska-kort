@@ -30,39 +30,58 @@ export interface CardProps {
   entry: WordEntry;
   flipped: boolean;
   onFlip?: () => void;
+  /** Reverse mode: the English leads and the Swedish is what is being asked for. */
+  reverse?: boolean;
 }
 
-export function Card({ entry, flipped, onFlip }: CardProps) {
+export function Card({ entry, flipped, onFlip, reverse = false }: CardProps) {
   const size = useMemo(() => sizeClass(entry.swedish), [entry.swedish]);
   const showLemma = entry.lemma !== undefined && entry.lemma !== entry.swedish;
+  const prompt = reverse ? entry.english.join(', ') : entry.swedish;
+
+  // The two sides swap wholesale rather than the card being rebuilt: the
+  // Swedish side still carries the forms table, whichever face it is on.
+  const swedishSide = (
+    <>
+      <span className={styles.posChip}>{POS_LABEL[entry.pos]}</span>
+      <div className={styles.frontBody}>
+        <span className={cx(styles.swedish, size)} lang="sv">
+          {entry.swedish}
+        </span>
+        {showLemma && (
+          <span className={styles.lemma}>
+            av <span lang="sv">{entry.lemma}</span>
+          </span>
+        )}
+      </div>
+    </>
+  );
+
+  const englishSide = <p className={styles.english}>{entry.english.join(', ')}</p>;
+
+  const detail = (
+    <>
+      {entry.forms && <FormsTable forms={entry.forms} />}
+      {entry.example && (
+        <p className={styles.example}>
+          <span lang="sv">{entry.example.sv}</span>
+          <span className={styles.exampleEn}>{entry.example.en}</span>
+        </p>
+      )}
+      {entry.note && <p className={styles.note}>{entry.note}</p>}
+    </>
+  );
 
   const content = (
     <div className={cx(styles.inner, flipped && styles.flipped)}>
-      <div className={cx(styles.face, styles.front)}>
-        <span className={styles.posChip}>{POS_LABEL[entry.pos]}</span>
-        <div className={styles.frontBody}>
-          <span className={cx(styles.swedish, size)} lang="sv">
-            {entry.swedish}
-          </span>
-          {showLemma && (
-            <span className={styles.lemma}>
-              av <span lang="sv">{entry.lemma}</span>
-            </span>
-          )}
-        </div>
+      <div className={cx(styles.face, styles.front, reverse && styles.reverseFront)}>
+        {reverse ? englishSide : swedishSide}
         {onFlip && <span className={styles.hint}>Tryck för att vända</span>}
       </div>
 
       <div className={cx(styles.face, styles.back)}>
-        <p className={styles.english}>{entry.english.join(', ')}</p>
-        {entry.forms && <FormsTable forms={entry.forms} />}
-        {entry.example && (
-          <p className={styles.example}>
-            <span lang="sv">{entry.example.sv}</span>
-            <span className={styles.exampleEn}>{entry.example.en}</span>
-          </p>
-        )}
-        {entry.note && <p className={styles.note}>{entry.note}</p>}
+        {reverse ? swedishSide : englishSide}
+        {detail}
       </div>
     </div>
   );
@@ -74,7 +93,7 @@ export function Card({ entry, flipped, onFlip }: CardProps) {
       type="button"
       className={styles.card}
       aria-pressed={flipped}
-      aria-label={`${entry.swedish} — tryck för att vända kortet`}
+      aria-label={`${prompt} — tryck för att vända kortet`}
       onClick={onFlip}
     >
       {content}

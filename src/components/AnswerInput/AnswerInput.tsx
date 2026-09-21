@@ -18,6 +18,8 @@ export interface AnswerInputProps {
   submitted?: string;
   /** Lets the route keep focus in the field and select it on a near miss. */
   inputRef?: RefObject<HTMLInputElement | null>;
+  /** Reverse mode: the field is asking for Swedish, and has to say so. */
+  reverse?: boolean;
 }
 
 /**
@@ -94,6 +96,7 @@ export function AnswerInput({
   answer = '',
   submitted = '',
   inputRef,
+  reverse = false,
 }: AnswerInputProps) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -101,6 +104,7 @@ export function AnswerInput({
   };
 
   const diff = verdict === 'close' ? diffChars(submitted, answer) : undefined;
+  const label = reverse ? 'Svara på svenska' : 'Svara på engelska';
 
   return (
     <form className={styles.wrap} onSubmit={handleSubmit}>
@@ -117,8 +121,9 @@ export function AnswerInput({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
-          placeholder="Svara på engelska"
-          aria-label="Svara på engelska"
+          placeholder={label}
+          aria-label={label}
+          lang={reverse ? 'sv' : 'en'}
           autoCapitalize="off"
           autoCorrect="off"
           autoComplete="off"

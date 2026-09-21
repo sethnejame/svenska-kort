@@ -18,6 +18,15 @@ describe('AnswerInput', () => {
     expect(input).toHaveAttribute('inputmode', 'text');
   });
 
+  it('asks for the language it is actually grading', () => {
+    const { unmount } = render(<AnswerInput value="" onChange={noop} onSubmit={noop} />);
+    expect(screen.getByLabelText('Svara på engelska')).toHaveAttribute('lang', 'en');
+    unmount();
+
+    render(<AnswerInput value="" onChange={noop} onSubmit={noop} reverse />);
+    expect(screen.getByLabelText('Svara på svenska')).toHaveAttribute('lang', 'sv');
+  });
+
   it('reports every keystroke to onChange', async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();

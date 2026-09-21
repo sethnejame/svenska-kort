@@ -22,6 +22,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isNumber = (value: unknown): value is number => typeof value === 'number';
+const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
 
 /** Absent and present-but-valid both pass; present-but-wrong is what fails. */
 const optional =
@@ -93,6 +94,7 @@ const isProfile = objectOf<Profile>({
  */
 interface KnownFields {
   schemaVersion?: number | undefined;
+  reverse?: boolean | undefined;
   stats?: Record<string, StoredWordStat> | undefined;
   sessionCount?: number | undefined;
   sessionHistory?: SessionResult[] | undefined;
@@ -115,6 +117,7 @@ export type PersistedState = KnownFields & Record<string, unknown>;
 
 const isKnownFields = objectOf<KnownFields>({
   schemaVersion: optional(isNumber),
+  reverse: optional(isBoolean),
   stats: optional(recordOf(isWordStat)),
   sessionCount: optional(isNumber),
   sessionHistory: optional(arrayOf(isSessionResult)),
@@ -134,6 +137,7 @@ const isKnownFields = objectOf<KnownFields>({
 
 export interface PersistedGame {
   schemaVersion: number;
+  reverse: boolean;
   stats: Record<string, WordStat>;
   sessionCount: number;
   sessionHistory: SessionResult[];
@@ -209,6 +213,7 @@ function statsWithDefaults(
 export function withDefaults(persisted: PersistedState): PersistedGame {
   return {
     schemaVersion: SCHEMA_VERSION,
+    reverse: persisted.reverse ?? false,
     stats: statsWithDefaults(persisted.stats ?? {}),
     sessionCount: persisted.sessionCount ?? 0,
     sessionHistory: persisted.sessionHistory ?? [],

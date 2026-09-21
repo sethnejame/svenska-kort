@@ -131,6 +131,16 @@
   text-align: center;
 }
 
+/* In reverse the English is the prompt, so it takes the front's centring. */
+.reverseFront .english {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.5rem, 6vw, 2.25rem);
+  overflow-wrap: anywhere;
+}
+
 .example {
   display: flex;
   flex-direction: column;

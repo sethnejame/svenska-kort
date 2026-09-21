@@ -3,7 +3,12 @@ import { persist } from 'zustand/middleware';
 import type { WordEntry } from '../types/word';
 import type { Profile, SessionResult, WordStat } from '../types/progress';
 import type { AnswerVerdict, Verdict } from '../lib/checkAnswer';
-import { checkAnswer, collectAllAnswers } from '../lib/checkAnswer';
+import {
+  checkAnswer,
+  checkSwedish,
+  collectAllAnswers,
+  collectAllSwedish,
+} from '../lib/checkAnswer';
 import { pointsFor } from '../lib/scoring';
 import { selectNext } from '../lib/selectNext';
 import { dueEntries, nextBox } from '../lib/leitner';
@@ -49,10 +54,14 @@ export interface GameState {
   stats: Record<string, WordStat>;
   /** Stop-list for checkAnswer, built once per deck. */
   allAnswers: ReadonlySet<string>;
+  /** The same, in Swedish, for reverse mode. */
+  allSwedish: ReadonlySet<string>;
   rng: () => number;
 
   // Career state: survives a session, and is what actually gets persisted.
   schemaVersion: number;
+  /** True when the prompt is English and the learner types Swedish. */
+  reverse: boolean;
   /** Runs started, ever. The clock the Leitner schedule counts intervals in. */
   sessionCount: number;
   sessionHistory: SessionResult[];
@@ -71,6 +80,8 @@ export interface GameActions {
   skip: (now: number) => void;
   continue_: (now: number) => void;
   endSession: (now: number) => void;
+  /** Takes effect from the next session, so a run is never graded both ways. */
+  setReverse: (reverse: boolean) => void;
   saveProfile: (displayName: string, avatarSeed: string, now: number) => void;
   /** T14 import. The caller has already merged or replaced. */
   setProgress: (progress: {
@@ -103,8 +114,10 @@ export const INITIAL_GAME_STATE: GameState = {
   endedAt: null,
   stats: {},
   allAnswers: new Set<string>(),
+  allSwedish: new Set<string>(),
   rng: Math.random,
   schemaVersion: SCHEMA_VERSION,
+  reverse: false,
   sessionCount: 0,
   sessionHistory: [],
   profile: null,
@@ -125,6 +138,7 @@ function career(state: GameState) {
     totalScore: state.totalScore,
     storageRecovered: state.storageRecovered,
     schemaVersion: state.schemaVersion,
+    reverse: state.reverse,
   };
 }
 
@@ -264,7 +278,11 @@ const createGame = (
     // deck back up mid-run keeps the streak and score rather than charging the
     // learner for refreshing the page.
     if (unfinished && state.deckId === deckId && state.pool.length > 0) {
-      const resumed: GameState = { ...state, allAnswers: collectAllAnswers(entries) };
+      const resumed: GameState = {
+        ...state,
+        allAnswers: collectAllAnswers(entries),
+        allSwedish: collectAllSwedish(entries),
+      };
       set({ ...resumed, ...drawNext(resumed, now) });
       return;
     }
@@ -289,6 +307,7 @@ const createGame = (
       // The stop-list stays the whole deck, not just what is due — `increased`
       // must read as wrong for `minskade` whether or not it is scheduled today.
       allAnswers: collectAllAnswers(entries),
+      allSwedish: collectAllSwedish(entries),
       startedAt: now,
     };
 
@@ -316,7 +335,9 @@ const createGame = (
     const entry = getEntry(state.currentId, addedEntries());
     if (!entry) return;
 
-    const result = checkAnswer(state.input, entry, state.allAnswers);
+    const result = state.reverse
+      ? checkSwedish(state.input, entry, state.allSwedish)
+      : checkAnswer(state.input, entry, state.allAnswers);
 
     if (result.verdict === 'correct') {
       const wasTyped = !state.peeked;
@@ -395,6 +416,10 @@ const createGame = (
     set(finishSession(state, now));
   },
 
+  setReverse: (reverse) => {
+    set({ reverse });
+  },
+
   saveProfile: (displayName, avatarSeed, now) => {
     const state = get();
     const name = displayName.trim();
@@ -421,6 +446,9 @@ const createGame = (
     set({
       ...INITIAL_GAME_STATE,
       rng: get().rng,
+      // The direction is how this learner likes to practise, not something the
+      // file carries, so an import leaves it alone.
+      reverse: get().reverse,
       profile,
       stats,
       // An imported library counts its intervals in the other device's
@@ -450,6 +478,7 @@ export const useGameStore = create<GameState & GameActions>()(
     // rather than restoring a half-typed answer. The run itself survives.
     partialize: (state) => ({
       schemaVersion: SCHEMA_VERSION,
+      reverse: state.reverse,
       stats: state.stats,
       sessionCount: state.sessionCount,
       sessionHistory: state.sessionHistory,

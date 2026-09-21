@@ -8,6 +8,7 @@ import { deckProgress } from '../lib/progress';
 import { dueCount } from '../lib/leitner';
 import { weakestEntries } from '../lib/weakest';
 import { entriesForDeck, WEAKEST_DECK } from '../data/decks';
+import { cx } from '../utils/cx';
 import styles from './Decks.module.css';
 
 export function Decks() {
@@ -17,6 +18,8 @@ export function Decks() {
   const stats = useGameStore((s) => s.stats);
   const profile = useGameStore((s) => s.profile);
   const sessionCount = useGameStore((s) => s.sessionCount);
+  const reverse = useGameStore((s) => s.reverse);
+  const setReverse = useGameStore((s) => s.setReverse);
 
   // The weakest deck is generated, so it has no tile until the learner has
   // missed something. An empty one would only ever say nought of nought.
@@ -49,6 +52,31 @@ export function Decks() {
           </Link>
         )}
       </header>
+
+      <div className={styles.direction} role="group" aria-label="Riktning">
+        <button
+          type="button"
+          className={cx(styles.directionOption, !reverse && styles.directionActive)}
+          aria-pressed={!reverse}
+          onClick={() => {
+            setReverse(false);
+          }}
+          lang="sv"
+        >
+          Svenska → engelska
+        </button>
+        <button
+          type="button"
+          className={cx(styles.directionOption, reverse && styles.directionActive)}
+          aria-pressed={reverse}
+          onClick={() => {
+            setReverse(true);
+          }}
+          lang="sv"
+        >
+          Engelska → svenska
+        </button>
+      </div>
 
       <ul className={styles.grid}>
         {decks.map((deck) => {

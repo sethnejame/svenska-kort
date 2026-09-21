@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WordEntry } from '../types/word';
 import type { SessionResult } from '../types/progress';
 import { entriesForDeck, getEntry } from '../data/decks';
+import { foldSwedish } from '../lib/normalize';
 import { consumeRecoveryFlag, MAX_SESSION_HISTORY, STORAGE_KEY } from './persisted';
 import { resetStorageForTests } from './storage';
 import { INITIAL_GAME_STATE, useGameStore } from './useGameStore';
@@ -383,6 +384,62 @@ describe('useGameStore scheduling', () => {
 
     expect(store().pool.length).toBeLessThan(FRASER_SIZE);
     expect(store().allAnswers.size).toBe(full);
+  });
+});
+
+describe('useGameStore reverse mode', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    resetStorageForTests();
+    useGameStore.setState({ ...INITIAL_GAME_STATE, rng: () => 0.5 });
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    resetStorageForTests();
+  });
+
+  it('grades the typed Swedish rather than the English', () => {
+    useGameStore.setState({ reverse: true });
+    store().startSession('fraser', 0);
+
+    const entry = current();
+    typeAndSubmit(entry.swedish, 1000);
+
+    expect(store().status).toBe('correct');
+  });
+
+  it('takes the folded spelling from a learner with no å, ä or ö to hand', () => {
+    useGameStore.setState({ reverse: true });
+    store().startSession('fraser', 0);
+
+    const entry = current();
+    typeAndSubmit(foldSwedish(entry.swedish), 1000);
+
+    expect(store().status).toBe('correct');
+  });
+
+  it('marks the English answer wrong once the direction is reversed', () => {
+    useGameStore.setState({ reverse: true });
+    store().startSession('fraser', 0);
+
+    answerCorrectly(1000);
+
+    expect(store().status).toBe('revealed');
+  });
+
+  it('survives a reload, because it is how this learner practises', () => {
+    store().setReverse(true);
+    reload();
+
+    expect(store().reverse).toBe(true);
+  });
+
+  it('is left alone by an import, which carries no direction of its own', () => {
+    store().setReverse(true);
+    store().setProgress({ profile: null, stats: {}, sessionHistory: [] });
+
+    expect(store().reverse).toBe(true);
   });
 });
 

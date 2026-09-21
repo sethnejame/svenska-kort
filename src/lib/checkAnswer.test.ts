@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WordEntry } from '../types/word';
-import { checkAnswer, collectAllAnswers } from './checkAnswer';
+import { checkAnswer, checkSwedish, collectAllAnswers, collectAllSwedish } from './checkAnswer';
 
 function entry(english: string[], overrides: Partial<WordEntry> = {}): WordEntry {
   return { id: 'fixture-other', swedish: 'ord', english, pos: 'other', ...overrides };
@@ -140,6 +140,102 @@ describe('collectAllAnswers', () => {
   it('includes both whole answers and their slash-separated pieces', () => {
     const set = collectAllAnswers([entry(['number / the number'])]);
     expect(set.has('number')).toBe(true);
+  });
+});
+
+const swedish = (id: string, sv: string, over: Partial<WordEntry> = {}): WordEntry => ({
+  id,
+  swedish: sv,
+  english: ['x'],
+  pos: 'other',
+  ...over,
+});
+
+// `här` earns its place: it folds onto `har`, the same as `hår` does, which is
+// what makes the stop-list matter in this direction.
+const svDeck: WordEntry[] = [
+  swedish('har-noun', 'hår'),
+  swedish('har-adverb', 'här'),
+  swedish('sprak-noun', 'språket'),
+  swedish('begrava-verb', 'begraver', { lemma: 'begrava' }),
+  swedish('hus-noun', 'huset'),
+];
+
+const allSwedish = collectAllSwedish(svDeck);
+
+describe('checkSwedish', () => {
+  it('takes the form on the card', () => {
+    expect(checkSwedish('språket', swedish('sprak-noun', 'språket'), allSwedish)).toMatchObject({
+      verdict: 'correct',
+      reason: 'exact',
+    });
+  });
+
+  it('ignores case, spacing and a trailing full stop', () => {
+    expect(checkSwedish('  Språket. ', swedish('sprak-noun', 'språket'), allSwedish).verdict).toBe(
+      'correct',
+    );
+  });
+
+  it('accepts aao for åäö', () => {
+    expect(checkSwedish('spraket', swedish('sprak-noun', 'språket'), allSwedish)).toMatchObject({
+      verdict: 'correct',
+      matched: 'språket',
+      reason: 'folded',
+    });
+  });
+
+  it('accepts the dictionary form when the card shows an inflection', () => {
+    // The English prompt cannot say which inflection it wants.
+    const entry = swedish('begrava-verb', 'begraver', { lemma: 'begrava' });
+    expect(checkSwedish('begrava', entry, allSwedish).verdict).toBe('correct');
+  });
+
+  it('refuses a different word that happens to fold the same way', () => {
+    // `här` is its own word in the deck, so it never passes as `hår`.
+    expect(checkSwedish('här', swedish('har-noun', 'hår'), allSwedish).verdict).toBe('wrong');
+  });
+
+  it('calls a one-letter slip nearly right', () => {
+    expect(checkSwedish('spraket', swedish('sprak-noun', 'sprakat'), allSwedish)).toMatchObject({
+      verdict: 'close',
+      distance: 1,
+    });
+  });
+
+  it('reports the nearer of the two forms when both are near misses', () => {
+    const entry = swedish('begravare-noun', 'begravaren', { lemma: 'begravare' });
+    expect(checkSwedish('begravarx', entry, allSwedish)).toMatchObject({
+      verdict: 'close',
+      matched: 'begravare',
+      distance: 1,
+    });
+  });
+
+  it('is wrong on an empty answer', () => {
+    expect(checkSwedish('   ', swedish('hus-noun', 'huset'), allSwedish).verdict).toBe('wrong');
+  });
+
+  it('is wrong on something too short to fuzz and nothing like the answer', () => {
+    expect(checkSwedish('xyz', swedish('hus-noun', 'huset'), allSwedish).verdict).toBe('wrong');
+  });
+
+  it('is wrong on a long answer that is nothing like it', () => {
+    expect(checkSwedish('kanelbulle', swedish('hus-noun', 'huset'), allSwedish).verdict).toBe(
+      'wrong',
+    );
+  });
+});
+
+describe('collectAllSwedish', () => {
+  it('claims the shown form and the lemma behind it', () => {
+    const set = collectAllSwedish([swedish('begrava-verb', 'begraver', { lemma: 'begrava' })]);
+    expect(set.has('begraver')).toBe(true);
+    expect(set.has('begrava')).toBe(true);
+  });
+
+  it('does not list a lemma twice when it is the shown form', () => {
+    expect(collectAllSwedish([swedish('hus-noun', 'huset', { lemma: 'huset' })]).size).toBe(1);
   });
 });
 

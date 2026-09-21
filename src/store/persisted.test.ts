@@ -139,6 +139,7 @@ describe('withDefaults', () => {
   it('fills every missing field', () => {
     expect(withDefaults({})).toEqual({
       schemaVersion: SCHEMA_VERSION,
+      reverse: false,
       stats: {},
       sessionCount: 0,
       sessionHistory: [],
@@ -158,10 +159,11 @@ describe('withDefaults', () => {
   });
 
   it('prefers what was stored', () => {
-    const filled = withDefaults({ totalScore: 42, stats: STATS, endedAt: 1000 });
+    const filled = withDefaults({ totalScore: 42, stats: STATS, endedAt: 1000, reverse: true });
     expect(filled.totalScore).toBe(42);
     expect(filled.stats).toEqual(STATS);
     expect(filled.endedAt).toBe(1000);
+    expect(filled.reverse).toBe(true);
   });
 });
 
