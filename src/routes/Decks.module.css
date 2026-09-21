@@ -56,6 +56,15 @@
   text-decoration: none;
 }
 
+/* The tile's own shadow ties with the global :focus-visible rule on specificity
+   and wins on source order, so the ring has to be restored here. It is stacked
+   in front of the elevation rather than replacing it, so nothing lifts or drops
+   when focus arrives. */
+.tile:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-card);
+}
+
 .tile:active {
   transform: scale(0.99);
 }
@@ -82,6 +91,14 @@
 .deckCount {
   font-size: 0.8125rem;
   color: var(--c-ink-soft);
+}
+
+/* Sits directly above the add link, which is the way out of this state. */
+.empty {
+  margin: var(--space-4) 0 0;
+  color: var(--c-ink-soft);
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 .addLink {

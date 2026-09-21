@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { Card } from '../components/Card/Card';
 import { AnswerInput } from '../components/AnswerInput/AnswerInput';
 import { ScoreStrip } from '../components/ScoreStrip/ScoreStrip';
+import { Confetti } from '../components/Confetti/Confetti';
 import { useGameStore } from '../store/useGameStore';
 import { useDeckStore } from '../store/useDeckStore';
 import { getDeck, getEntry } from '../data/decks';
@@ -191,6 +192,8 @@ export function Play() {
         sessionScore={sessionScore}
         bestStreakEver={bestStreakInSession}
       />
+
+      <Confetti streak={streak} />
 
       <div
         className={cx(styles.band, bandState)}

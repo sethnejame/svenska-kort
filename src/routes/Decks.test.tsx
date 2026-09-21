@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { WordStat } from '../types/progress';
 import { entriesForDeck } from '../data/decks';
 import { INITIAL_GAME_STATE, useGameStore } from '../store/useGameStore';
+import { INITIAL_DECK_STATE, useDeckStore } from '../store/useDeckStore';
 import { Decks } from './Decks';
 
 function renderDecks() {
@@ -37,6 +38,7 @@ function mastered(deckId: string, count: number): Record<string, WordStat> {
 describe('Decks', () => {
   beforeEach(() => {
     useGameStore.setState({ ...INITIAL_GAME_STATE });
+    useDeckStore.setState({ ...INITIAL_DECK_STATE });
   });
 
   it('renders one tile per builtin deck with its entry count', () => {
@@ -81,6 +83,31 @@ describe('Decks', () => {
     await user.click(screen.getByText('Fraser'));
 
     expect(screen.getByText('spelar')).toBeInTheDocument();
+  });
+
+  it('says where the decks came from while the learner has none of their own', () => {
+    renderDecks();
+
+    expect(screen.getByText(/Du har inga egna ord än/)).toBeInTheDocument();
+    // The note is only worth anything next to the way out of it.
+    expect(screen.getByRole('link', { name: 'Lägg till ord' })).toBeInTheDocument();
+  });
+
+  it('drops the note once there are words of their own', () => {
+    useDeckStore.setState({
+      userEntries: [
+        {
+          id: 'mine-1',
+          swedish: 'kanelbulle',
+          english: ['cinnamon bun'],
+          pos: 'noun',
+          tags: ['vardag'],
+        },
+      ],
+    });
+    renderDecks();
+
+    expect(screen.queryByText(/Du har inga egna ord än/)).not.toBeInTheDocument();
   });
 
   it('hides the profile link until a profile exists', () => {

@@ -7,6 +7,28 @@
     <meta name="theme-color" content="#17131E" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Svenska Kort — flashcards for Swedish learners. Type the English, flip the card, keep the streak." />
     <title>Svenska Kort</title>
+
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="Svenska Kort" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <!-- A link preview is fetched by a server that has no page context, so
+         every URL here has to be absolute. The path still comes from the Vite
+         base so it cannot drift from where the app is actually deployed. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sethnejame.github.io%BASE_URL%" />
+    <meta property="og:title" content="Svenska Kort" />
+    <meta property="og:description" content="Flashcards for Swedish learners. Type the English, flip the card, keep the streak." />
+    <meta property="og:image" content="https://sethnejame.github.io%BASE_URL%og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A purple flashcard with two lines of writing on it." />
+    <!-- `summary` crops to a square, which the centred card survives. -->
+    <meta name="twitter:card" content="summary" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "test": "vitest run --coverage",
     "validate:decks": "tsx scripts/validate-decks.ts",
+    "icons": "tsx scripts/make-icons.ts",
     "check": "npm run typecheck && npm run lint && npm run validate:decks && npm run test"
   },
   "dependencies": {

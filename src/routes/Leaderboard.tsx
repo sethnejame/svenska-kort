@@ -85,9 +85,16 @@ export function Leaderboard() {
       )}
 
       {status === 'ready' && rows.length === 0 && (
-        <p className={styles.empty} lang="sv">
-          Spela en runda för att komma med på listan.
-        </p>
+        <div className={styles.empty}>
+          <p className={styles.emptyText} lang="sv">
+            {scope === 'week'
+              ? 'Ingen har spelat den här veckan än.'
+              : 'Spela en runda för att komma med på listan.'}
+          </p>
+          <Link to="/play/alla" className={styles.emptyAction} lang="sv">
+            Spela en runda
+          </Link>
+        </div>
       )}
 
       {status === 'ready' && rows.length > 0 && (

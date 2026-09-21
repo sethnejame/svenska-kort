@@ -56,7 +56,7 @@ export interface GameState {
   profile: Profile | null;
   bestStreakEver: number;
   totalScore: number;
-  /** Set when the stored blob was unreadable and defaults were used. T16 surfaces it. */
+  /** Set when the stored blob was unreadable and defaults were used. */
   storageRecovered: boolean;
 }
 
@@ -75,6 +75,8 @@ export interface GameActions {
     stats: Record<string, WordStat>;
     sessionHistory: SessionResult[];
   }) => void;
+  /** The recovery notice is persisted, so it needs an explicit way to go away. */
+  dismissRecovery: () => void;
 }
 
 export const INITIAL_GAME_STATE: GameState = {
@@ -396,6 +398,10 @@ const createGame = (
       totalScore: profile?.totalScore ?? 0,
       bestStreakEver: profile?.bestStreakEver ?? 0,
     });
+  },
+
+  dismissRecovery: () => {
+    set({ storageRecovered: false });
   },
 });
 

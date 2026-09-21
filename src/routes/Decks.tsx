@@ -57,6 +57,12 @@ export function Decks() {
         })}
       </ul>
 
+      {userEntries.length === 0 && (
+        <p className={styles.empty} lang="sv">
+          Du har inga egna ord än. Lekarna ovan är de som följer med appen.
+        </p>
+      )}
+
       <Link to="/add" className={styles.addLink} lang="sv">
         Lägg till ord
       </Link>

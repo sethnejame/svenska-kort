@@ -8,11 +8,16 @@
   --c-ink-soft: #6b6076;
   --c-card: #ffffff;
   --c-primary: #6c4cf1;
-  --c-accent: #ffb627;
-  --c-correct: #1db87a;
-  --c-close: #f2a03d;
-  --c-wrong: #e5484d;
-  --c-swede: #4c7cf1;
+  /* These five are darker than their dark-theme twins on purpose. Every one of
+     them is used as text on --c-bg or --c-card, and the brighter versions this
+     palette started with sat between 1.7:1 and 3.9:1 there. The values below
+     clear 4.5:1 against the page, the card and the chip; --c-accent only ever
+     draws the streak flame and the confetti, so it clears 3:1 as a graphic. */
+  --c-accent: #c38100;
+  --c-correct: #158256;
+  --c-close: #a8610b;
+  --c-wrong: #df2026;
+  --c-swede: #205bee;
 
   --r-card: 28px;
   --r-pill: 999px;

@@ -48,6 +48,13 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Only the selected scope needs this: it is the one carrying a shadow that ties
+   with the global :focus-visible rule and wins on source order. */
+.scopeOn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-card);
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -140,6 +147,23 @@
   background: var(--c-sunken);
   color: var(--c-ink-soft);
   text-align: center;
+}
+
+.emptyText {
+  margin: 0 0 var(--space-4);
+}
+
+.emptyAction {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-5);
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: var(--c-bg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .footerRank {

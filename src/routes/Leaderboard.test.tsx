@@ -207,6 +207,33 @@ describe('Leaderboard with a slow store', () => {
     vi.doUnmock('../services/scoreStore');
   });
 
+  it('offers a round to play when the board comes back empty', async () => {
+    vi.doMock('../services/scoreStore', () => ({
+      scoreStore: {
+        topScores: () => Promise.resolve([]),
+        myRank: () => Promise.resolve(null),
+      },
+    }));
+
+    const { Leaderboard: Bare } = await import('./Leaderboard');
+    const router = createMemoryRouter(
+      [
+        { path: '/', element: <Bare /> },
+        { path: '/play/alla', element: <div>spelar</div> },
+      ],
+      { initialEntries: ['/'] },
+    );
+    render(<RouterProvider router={router} />);
+
+    expect(await screen.findByText('Spela en runda för att komma med på listan.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Spela en runda' })).toHaveAttribute(
+      'href',
+      '/play/alla',
+    );
+
+    vi.doUnmock('../services/scoreStore');
+  });
+
   it('says so when the store gives up', async () => {
     vi.doMock('../services/scoreStore', () => ({
       scoreStore: {

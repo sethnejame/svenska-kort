@@ -1,0 +1,44 @@
+/* Fixed rather than absolute so the burst never depends on which ancestor
+   happens to be positioned, and never widens the page it sits over. */
+.field {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dot {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--dot-color);
+  opacity: 0;
+  animation: fly 900ms var(--ease-spring) forwards;
+}
+
+@keyframes fly {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dot-dx)), calc(-50% + var(--dot-dy))) scale(1)
+      rotate(var(--dot-rotation));
+    opacity: 0;
+  }
+}
+
+/* The component already refuses to mount under reduced motion; this is what
+   holds if a burst is somehow on screen when the setting changes. */
+@media (prefers-reduced-motion: reduce) {
+  .field {
+    display: none;
+  }
+}

@@ -58,6 +58,13 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Only the selected segment needs this: it is the one carrying a shadow that
+   ties with the global :focus-visible rule and wins on source order. */
+.segmentActive:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-card);
+}
+
 .bulk {
   display: flex;
   flex-direction: column;
