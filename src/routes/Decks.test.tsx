@@ -45,8 +45,10 @@ describe('Decks', () => {
   it('renders one tile per builtin deck with its entry count', () => {
     renderDecks();
 
-    // Every link bar the one down to `/add`.
-    const tiles = screen.getAllByRole('link').filter((link) => link.textContent !== 'Lägg till ord');
+    // The deck tiles, and none of the links in the footer.
+    const tiles = screen
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('href')?.startsWith('/play/') ?? false);
     expect(tiles).toHaveLength(BUILTIN_DECKS.length);
 
     // Counts are read off the data rather than written out, so adding vocabulary

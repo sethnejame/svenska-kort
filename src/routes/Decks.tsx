@@ -115,9 +115,14 @@ export function Decks() {
         </p>
       )}
 
-      <Link to="/add" className={styles.addLink} lang="sv">
-        Lägg till ord
-      </Link>
+      <div className={styles.links}>
+        <Link to="/add" className={styles.addLink} lang="sv">
+          Lägg till ord
+        </Link>
+        <Link to="/stats" className={styles.addLink} lang="sv">
+          Din statistik
+        </Link>
+      </div>
     </main>
   );
 }

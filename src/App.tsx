@@ -36,9 +36,10 @@ function Shell() {
 
 /**
  * Decks, Play and Profile are the first screen a learner can land on, so they
- * ship in the entry chunk. Add and the leaderboard are detours reached by a tap,
- * and between them they own the parser and the whole validation dependency, so
- * they are fetched when that tap happens instead of on every cold start.
+ * ship in the entry chunk. Add, the leaderboard and the stats are detours
+ * reached by a tap, and between them they own the parser and the whole
+ * validation dependency, so they are fetched when that tap happens instead of
+ * on every cold start.
  */
 const router = createHashRouter([
   {
@@ -52,6 +53,13 @@ const router = createHashRouter([
         lazy: async () => {
           const { Add } = await import('./routes/Add');
           return { element: gated(<Add />) };
+        },
+      },
+      {
+        path: '/stats',
+        lazy: async () => {
+          const { Stats } = await import('./routes/Stats');
+          return { element: gated(<Stats />) };
         },
       },
       {

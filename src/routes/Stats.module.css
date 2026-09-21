@@ -1,0 +1,212 @@
+.screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-y: auto;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-4);
+  padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+/* Two across at 375px: four headline numbers, none of them wrapped. */
+.figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.figure {
+  padding: var(--space-3);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.figure dt {
+  color: var(--c-ink-soft);
+  font-size: 0.8125rem;
+}
+
+.figure dd {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.panel {
+  padding: var(--space-4);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.panelTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.panelNote {
+  margin: var(--space-2) 0 0;
+  color: var(--c-ink-soft);
+  font-size: 0.8125rem;
+}
+
+/* Bars grow from the bottom, so the row is a fixed height and each column
+   aligns its own bar to the end of it. */
+.boxes {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.box {
+  display: grid;
+  grid-template-rows: 72px auto auto;
+  align-items: end;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.boxBar {
+  align-self: end;
+  min-height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+}
+
+.boxBarMastered {
+  background: var(--c-correct);
+}
+
+.boxCount {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.boxLabel {
+  color: var(--c-ink-soft);
+  font-size: 0.6875rem;
+}
+
+.trend {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-1);
+  height: 84px;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trendItem {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-end;
+  border-radius: var(--r-pill);
+  background: var(--c-sunken);
+}
+
+.trendBar {
+  width: 100%;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+}
+
+.calendar {
+  margin-top: var(--space-4);
+}
+
+.weekdays,
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+
+.weekdays {
+  margin-bottom: var(--space-1);
+  color: var(--c-ink-soft);
+  font-size: 0.6875rem;
+  text-align: center;
+}
+
+/* Square cells whatever the width, so the grid never turns into stripes. */
+.day {
+  aspect-ratio: 1;
+  border-radius: var(--space-1);
+  background: var(--c-sunken);
+}
+
+/* One hue, four strengths. Different hues per level would read as four kinds of
+   day rather than as more and less of the same thing. */
+.day[data-level='1'] {
+  background: color-mix(in oklab, var(--c-primary) 30%, var(--c-sunken));
+}
+
+.day[data-level='2'] {
+  background: color-mix(in oklab, var(--c-primary) 55%, var(--c-sunken));
+}
+
+.day[data-level='3'] {
+  background: color-mix(in oklab, var(--c-primary) 78%, var(--c-sunken));
+}
+
+.day[data-level='4'] {
+  background: var(--c-primary);
+}
+
+.empty {
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--r-card);
+  background: var(--c-sunken);
+  text-align: center;
+}
+
+.emptyText {
+  margin: 0 0 var(--space-4);
+  color: var(--c-ink-soft);
+}
+
+.emptyAction {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-5);
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: var(--c-bg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  color: var(--c-ink-soft);
+  font-weight: 600;
+}
