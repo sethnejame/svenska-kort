@@ -183,6 +183,52 @@ describe('useDictation', () => {
     expect(result.current.error).toBe('not-allowed');
   });
 
+  it('retires the button when the platform has no service behind the API', () => {
+    stub();
+    const { result } = renderHook(() => useDictation({ lang: 'en-US', onResult: () => {} }));
+    expect(result.current.supported).toBe(true);
+
+    act(() => {
+      result.current.start();
+    });
+    act(() => {
+      latest().onerror?.({ error: 'network' });
+    });
+
+    // No message: the learner cannot act on it, and it would return per card.
+    expect(result.current.error).toBeNull();
+    expect(result.current.supported).toBe(false);
+  });
+
+  it('retires the button when the service refuses outright', () => {
+    stub();
+    const { result } = renderHook(() => useDictation({ lang: 'en-US', onResult: () => {} }));
+
+    act(() => {
+      result.current.start();
+    });
+    act(() => {
+      latest().onerror?.({ error: 'service-not-allowed' });
+    });
+
+    expect(result.current.supported).toBe(false);
+  });
+
+  it('keeps the button for a failure the learner can fix', () => {
+    stub();
+    const { result } = renderHook(() => useDictation({ lang: 'en-US', onResult: () => {} }));
+
+    act(() => {
+      result.current.start();
+    });
+    act(() => {
+      latest().onerror?.({ error: 'not-allowed' });
+    });
+
+    expect(result.current.supported).toBe(true);
+    expect(result.current.error).toBe('not-allowed');
+  });
+
   it('clears the last failure when the learner tries again', () => {
     stub();
     const { result } = renderHook(() => useDictation({ lang: 'en-US', onResult: () => {} }));

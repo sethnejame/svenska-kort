@@ -6,8 +6,20 @@ function constructor(): SpeechRecognitionConstructor | undefined {
   return window.SpeechRecognition ?? window.webkitSpeechRecognition;
 }
 
+/**
+ * Errors that mean the platform has no working recognition service at all,
+ * rather than that this one attempt went wrong. Chromium ships the constructor
+ * everywhere but routes the audio to a speech service it can only reach in
+ * official Google builds, so unofficial builds, Electron and most Linux
+ * Chromium packages answer every single attempt with `network`.
+ */
+const UNAVAILABLE_ERRORS = new Set(['network', 'service-not-allowed']);
+
 export interface Dictation {
-  /** False in every browser without the draft API, which is most of them. */
+  /**
+   * False in every browser without the draft API, which is most of them, and
+   * false once the API has proved it has nothing behind it.
+   */
   supported: boolean;
   listening: boolean;
   /** Null until something goes wrong, and cleared by the next attempt. */
@@ -30,6 +42,7 @@ export interface DictationOptions {
 export function useDictation({ lang, onResult }: DictationOptions): Dictation {
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const recognition = useRef<SpeechRecognitionLike | null>(null);
 
   // Held in a ref so changing the handler does not have to tear down a session
@@ -37,7 +50,7 @@ export function useDictation({ lang, onResult }: DictationOptions): Dictation {
   const handler = useRef(onResult);
   handler.current = onResult;
 
-  const supported = constructor() !== undefined;
+  const supported = constructor() !== undefined && !unavailable;
 
   // A session left running past the card, or past the screen, would keep the
   // microphone open and eventually deliver a transcript to nothing.
@@ -73,7 +86,17 @@ export function useDictation({ lang, onResult }: DictationOptions): Dictation {
     session.onerror = (event) => {
       // `no-speech` is someone pressing the button and thinking; it is not
       // worth a message, and the end event tidies up either way.
-      if (event.error !== 'no-speech' && event.error !== 'aborted') setError(event.error);
+      if (event.error === 'no-speech' || event.error === 'aborted') return;
+
+      // Retiring the button beats an error the learner can do nothing about:
+      // this failure is the platform's, it will repeat on every card, and
+      // typing was always the answer path anyway.
+      if (UNAVAILABLE_ERRORS.has(event.error)) {
+        setUnavailable(true);
+        return;
+      }
+
+      setError(event.error);
     };
 
     session.onend = () => {
