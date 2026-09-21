@@ -1,46 +1,84 @@
-import { z } from 'zod';
 import type { PersistStorage, StorageValue } from 'zustand/middleware';
-import type { Profile, SessionResult, WordStat } from '../types/progress';
+import type { LeitnerBox, Profile, SessionResult, WordStat } from '../types/progress';
 import { getItem, removeItem, setItem } from './storage';
 
 export const STORAGE_KEY = 'svenska-kort:v1';
 export const SCHEMA_VERSION = 1;
 export const MAX_SESSION_HISTORY = 50;
 
-const leitnerBoxSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-]);
+/**
+ * These guards are written out rather than declared with a schema library. This
+ * is the one validator on the startup path, so whatever it costs is paid by
+ * every cold start before the first card can be drawn; the shape it checks is
+ * flat and entirely optional, which is not worth a dependency an order of
+ * magnitude larger than the app's own code. The deck and backup schemas still
+ * use one, because those load only with the screens that need them.
+ */
+type Guard<T> = (value: unknown) => value is T;
 
-const wordStatSchema = z.object({
-  entryId: z.string(),
-  seen: z.number(),
-  correct: z.number(),
-  wrong: z.number(),
-  lastSeenAt: z.string(),
-  box: leitnerBoxSchema,
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isString = (value: unknown): value is string => typeof value === 'string';
+const isNumber = (value: unknown): value is number => typeof value === 'number';
+
+/** Absent and present-but-valid both pass; present-but-wrong is what fails. */
+const optional =
+  <T>(guard: Guard<T>): Guard<T | undefined> =>
+  (value): value is T | undefined =>
+    value === undefined || guard(value);
+
+const nullable =
+  <T>(guard: Guard<T>): Guard<T | null> =>
+  (value): value is T | null =>
+    value === null || guard(value);
+
+const arrayOf =
+  <T>(guard: Guard<T>): Guard<T[]> =>
+  (value): value is T[] =>
+    Array.isArray(value) && value.every((item) => guard(item));
+
+const recordOf =
+  <T>(guard: Guard<T>): Guard<Record<string, T>> =>
+  (value): value is Record<string, T> =>
+    isRecord(value) && Object.values(value).every((item) => guard(item));
+
+/** Every listed field must hold, and anything unlisted is left alone. */
+const objectOf =
+  <T>(fields: { [K in keyof T]-?: Guard<T[K]> }): Guard<T> =>
+  (value): value is T =>
+    isRecord(value) &&
+    Object.entries(fields).every(([key, guard]) => (guard as Guard<unknown>)(value[key]));
+
+const isLeitnerBox = (value: unknown): value is LeitnerBox =>
+  value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
+
+const isWordStat = objectOf<WordStat>({
+  entryId: isString,
+  seen: isNumber,
+  correct: isNumber,
+  wrong: isNumber,
+  lastSeenAt: isString,
+  box: isLeitnerBox,
 });
 
-const sessionResultSchema = z.object({
-  id: z.string(),
-  deckId: z.string(),
-  startedAt: z.string(),
-  endedAt: z.string(),
-  answered: z.number(),
-  correct: z.number(),
-  bestStreak: z.number(),
-  score: z.number(),
+const isSessionResult = objectOf<SessionResult>({
+  id: isString,
+  deckId: isString,
+  startedAt: isString,
+  endedAt: isString,
+  answered: isNumber,
+  correct: isNumber,
+  bestStreak: isNumber,
+  score: isNumber,
 });
 
-const profileSchema = z.object({
-  displayName: z.string(),
-  avatarSeed: z.string(),
-  createdAt: z.string(),
-  totalScore: z.number(),
-  bestStreakEver: z.number(),
+const isProfile = objectOf<Profile>({
+  displayName: isString,
+  avatarSeed: isString,
+  createdAt: isString,
+  totalScore: isNumber,
+  bestStreakEver: isNumber,
 });
 
 /**
@@ -48,25 +86,44 @@ const profileSchema = z.object({
  * missing things this build expects, or carry things it does not know about;
  * neither is a reason to throw away a learner's history.
  */
-const persistedStateSchema = z.looseObject({
-  schemaVersion: z.number().optional(),
-  stats: z.record(z.string(), wordStatSchema).optional(),
-  sessionHistory: z.array(sessionResultSchema).optional(),
-  profile: profileSchema.nullable().optional(),
-  bestStreakEver: z.number().optional(),
-  totalScore: z.number().optional(),
-  deckId: z.string().nullable().optional(),
-  pool: z.array(z.string()).optional(),
-  streak: z.number().optional(),
-  bestStreakInSession: z.number().optional(),
-  sessionScore: z.number().optional(),
-  answered: z.number().optional(),
-  correct: z.number().optional(),
-  startedAt: z.number().optional(),
-  endedAt: z.number().nullable().optional(),
-});
+interface KnownFields {
+  schemaVersion?: number | undefined;
+  stats?: Record<string, WordStat> | undefined;
+  sessionHistory?: SessionResult[] | undefined;
+  profile?: Profile | null | undefined;
+  bestStreakEver?: number | undefined;
+  totalScore?: number | undefined;
+  deckId?: string | null | undefined;
+  pool?: string[] | undefined;
+  streak?: number | undefined;
+  bestStreakInSession?: number | undefined;
+  sessionScore?: number | undefined;
+  answered?: number | undefined;
+  correct?: number | undefined;
+  startedAt?: number | undefined;
+  endedAt?: number | null | undefined;
+}
 
-export type PersistedState = z.infer<typeof persistedStateSchema>;
+/** The known fields, plus whatever a newer build happened to write alongside them. */
+export type PersistedState = KnownFields & Record<string, unknown>;
+
+const isKnownFields = objectOf<KnownFields>({
+  schemaVersion: optional(isNumber),
+  stats: optional(recordOf(isWordStat)),
+  sessionHistory: optional(arrayOf(isSessionResult)),
+  profile: optional(nullable(isProfile)),
+  bestStreakEver: optional(isNumber),
+  totalScore: optional(isNumber),
+  deckId: optional(nullable(isString)),
+  pool: optional(arrayOf(isString)),
+  streak: optional(isNumber),
+  bestStreakInSession: optional(isNumber),
+  sessionScore: optional(isNumber),
+  answered: optional(isNumber),
+  correct: optional(isNumber),
+  startedAt: optional(isNumber),
+  endedAt: optional(nullable(isNumber)),
+});
 
 export interface PersistedGame {
   schemaVersion: number;
@@ -102,15 +159,14 @@ let warnedAboutFutureVersion = false;
  * a case statement rather than a redesign.
  */
 export function migrate(persisted: unknown, version: number): PersistedState {
-  const parsed = persistedStateSchema.safeParse(persisted);
-  if (!parsed.success) {
+  if (!isRecord(persisted) || !isKnownFields(persisted)) {
     recovered = true;
     return {};
   }
 
   switch (version) {
     case SCHEMA_VERSION:
-      return parsed.data;
+      return persisted;
     default:
       if (version > SCHEMA_VERSION && !warnedAboutFutureVersion) {
         warnedAboutFutureVersion = true;
@@ -120,7 +176,7 @@ export function migrate(persisted: unknown, version: number): PersistedState {
       }
       // Older versions land here too. Every field this build knows about is
       // optional and unknown ones pass through, so nothing is dropped.
-      return parsed.data;
+      return persisted;
   }
 }
 

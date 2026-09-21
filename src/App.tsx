@@ -3,8 +3,6 @@ import { createHashRouter, Navigate, Outlet, RouterProvider } from 'react-router
 import { RecoveryBanner } from './components/RecoveryBanner/RecoveryBanner';
 import { Play } from './routes/Play';
 import { Decks } from './routes/Decks';
-import { Add } from './routes/Add';
-import { Leaderboard } from './routes/Leaderboard';
 import { Profile } from './routes/Profile';
 import { useGameStore } from './store/useGameStore';
 
@@ -36,6 +34,12 @@ function Shell() {
   );
 }
 
+/**
+ * Decks, Play and Profile are the first screen a learner can land on, so they
+ * ship in the entry chunk. Add and the leaderboard are detours reached by a tap,
+ * and between them they own the parser and the whole validation dependency, so
+ * they are fetched when that tap happens instead of on every cold start.
+ */
 const router = createHashRouter([
   {
     element: <Shell />,
@@ -43,8 +47,20 @@ const router = createHashRouter([
       { path: '/', element: <Navigate to="/decks" replace /> },
       { path: '/play/:deckId', element: gated(<Play />) },
       { path: '/decks', element: gated(<Decks />) },
-      { path: '/add', element: gated(<Add />) },
-      { path: '/leaderboard', element: gated(<Leaderboard />) },
+      {
+        path: '/add',
+        lazy: async () => {
+          const { Add } = await import('./routes/Add');
+          return { element: gated(<Add />) };
+        },
+      },
+      {
+        path: '/leaderboard',
+        lazy: async () => {
+          const { Leaderboard } = await import('./routes/Leaderboard');
+          return { element: gated(<Leaderboard />) };
+        },
+      },
       { path: '/profile', element: <Profile /> },
     ],
   },

@@ -45,16 +45,23 @@ export function ScoreStrip({ deckName, streak, sessionScore, bestStreakEver }: S
       </span>
 
       <div className={styles.cluster}>
-        <div className={styles.streak}>
+        {/* The flame is decorative, so without a label the count reads out as a
+            bare number with nothing to say what it counts. */}
+        <div className={styles.streak} aria-label={`Svit: ${String(streak)}`}>
           <Flame size={flameSize(streak)} />
           <span
             className={cx(styles.streakCount, bump && styles.bump)}
             onAnimationEnd={() => setBump(false)}
+            aria-hidden
           >
             {streak}
           </span>
         </div>
-        <span className={styles.score} aria-live="polite">
+        <span
+          className={styles.score}
+          aria-live="polite"
+          aria-label={`Poäng: ${String(sessionScore)}`}
+        >
           {sessionScore} p
         </span>
         <span className={styles.best} lang="sv">

@@ -73,6 +73,41 @@ describe('migrate', () => {
     expect(migrate({ stats: 'not a record' }, SCHEMA_VERSION)).toEqual({});
     expect(consumeRecoveryFlag()).toBe(true);
   });
+
+  /**
+   * One case per guard. A field that is absent is fine and a field that is
+   * present and right is fine; this pins down that present-and-wrong is the
+   * only thing that costs the learner their history.
+   */
+  it.each([
+    ['a blob that is not an object', 'just a string'],
+    ['a blob that is an array', ['a']],
+    ['a number where a string belongs', { deckId: 7 }],
+    ['a string where a number belongs', { totalScore: 'lots' }],
+    ['a stat that is missing a field', { stats: { a: { entryId: 'a', seen: 1 } } }],
+    ['a leitner box outside 1-5', { stats: { a: { ...STATS['hej-phrase'], box: 6 } } }],
+    ['a session history that is not an array', { sessionHistory: { id: 'a' } }],
+    ['a session result with a wrong field type', { sessionHistory: [{ id: 1 }] }],
+    ['a profile that is not an object', { profile: 'me' }],
+    ['a profile missing a field', { profile: { displayName: 'Ada' } }],
+    ['a pool holding something other than ids', { pool: [1, 2] }],
+    ['a non-null, non-number endedAt', { endedAt: 'later' }],
+  ])('recovers from %s', (_label, blob) => {
+    expect(migrate(blob, SCHEMA_VERSION)).toEqual({});
+    expect(consumeRecoveryFlag()).toBe(true);
+  });
+
+  it.each([
+    ['an explicit null profile', { profile: null }],
+    ['an explicit null deckId', { deckId: null }],
+    ['an explicit null endedAt', { endedAt: null }],
+    ['an empty stats record', { stats: {} }],
+    ['an empty session history', { sessionHistory: [] }],
+    ['a full, valid blob', { stats: STATS, pool: ['a'], totalScore: 1, endedAt: 2 }],
+  ])('keeps %s', (_label, blob) => {
+    expect(migrate(blob, SCHEMA_VERSION)).toEqual(blob);
+    expect(consumeRecoveryFlag()).toBe(false);
+  });
 });
 
 describe('withDefaults', () => {

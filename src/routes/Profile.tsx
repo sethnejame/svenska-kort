@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Avatar } from '../components/Avatar/Avatar';
-import { BackupPanel } from '../components/BackupPanel/BackupPanel';
 import { useGameStore } from '../store/useGameStore';
 import { randomSeeds } from '../lib/avatar';
 import { cx } from '../utils/cx';
 import styles from './Profile.module.css';
+
+/**
+ * Export and import pull in the file parser and its validation dependency, which
+ * together outweigh the rest of the app. They sit below the fold on a screen
+ * most learners see once, so they are fetched only when this screen is rendered.
+ */
+const BackupPanel = lazy(async () => {
+  const module = await import('../components/BackupPanel/BackupPanel');
+  return { default: module.BackupPanel };
+});
 
 const SEED_CHOICES = 6;
 const NAME_MIN = 2;
@@ -118,7 +127,9 @@ export function Profile() {
         </button>
       </form>
 
-      <BackupPanel />
+      <Suspense fallback={null}>
+        <BackupPanel />
+      </Suspense>
     </main>
   );
 }

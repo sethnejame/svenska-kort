@@ -1,7 +1,7 @@
 # Svenska Kort — the contract
 
 A mobile-first, fully static Swedish flashcard app. React 19 + TypeScript + Vite, deployed to
-GitHub Pages at `/svenska-kort/`. No backend in v1.
+GitHub Pages at the apex domain `svenskakort.se`, so the Vite `base` is `/`. No backend in v1.
 
 ## Hard rules
 
