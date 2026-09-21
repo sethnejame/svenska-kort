@@ -7,7 +7,7 @@ import { ScoreStrip } from '../components/ScoreStrip/ScoreStrip';
 import { Confetti } from '../components/Confetti/Confetti';
 import { useGameStore } from '../store/useGameStore';
 import { useDeckStore } from '../store/useDeckStore';
-import { getDeck, getEntry } from '../data/decks';
+import { deckDisplayName, getEntry } from '../data/decks';
 import { scoreStore } from '../services/scoreStore';
 import { cx } from '../utils/cx';
 import styles from './Play.module.css';
@@ -50,7 +50,7 @@ export function Play() {
   const sessionHistory = useGameStore((s) => s.sessionHistory);
 
   const entry = currentId === null ? undefined : getEntry(currentId, userEntries);
-  const deckName = getDeck(deckId)?.name ?? deckId;
+  const deckName = deckDisplayName(deckId);
   // The diff compares against the answer that actually matched, not the whole
   // comma-joined list, or every alternative would show up as a difference.
   const answer = lastVerdict?.matched ?? entry?.english[0] ?? '';

@@ -1,10 +1,13 @@
 import { Link } from 'react-router';
+import type { Deck } from '../types/progress';
 import { ProgressRing } from '../components/ProgressRing/ProgressRing';
 import { Avatar } from '../components/Avatar/Avatar';
 import { allDecks, useDeckStore } from '../store/useDeckStore';
 import { useGameStore } from '../store/useGameStore';
 import { deckProgress } from '../lib/progress';
 import { dueCount } from '../lib/leitner';
+import { weakestEntries } from '../lib/weakest';
+import { entriesForDeck, WEAKEST_DECK } from '../data/decks';
 import styles from './Decks.module.css';
 
 export function Decks() {
@@ -15,7 +18,20 @@ export function Decks() {
   const profile = useGameStore((s) => s.profile);
   const sessionCount = useGameStore((s) => s.sessionCount);
 
-  const decks = allDecks(userDecks, userEntries);
+  // The weakest deck is generated, so it has no tile until the learner has
+  // missed something. An empty one would only ever say nought of nought.
+  const weakest = weakestEntries(entriesForDeck('alla', userEntries), stats);
+  const weakestDeck: Deck = {
+    ...WEAKEST_DECK,
+    source: 'builtin',
+    entryIds: weakest.map((entry) => entry.id),
+    createdAt: '',
+  };
+
+  const decks = [
+    ...(weakest.length > 0 ? [weakestDeck] : []),
+    ...allDecks(userDecks, userEntries),
+  ];
   // Tapping a tile starts the next session, so that is the session the
   // schedule is counted against.
   const nextSession = sessionCount + 1;

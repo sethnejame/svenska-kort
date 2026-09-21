@@ -33,6 +33,16 @@ export const BUILTIN_DECKS = [
 export type BuiltinDeck = (typeof BUILTIN_DECKS)[number];
 export type BuiltinDeckId = BuiltinDeck['id'];
 
+/**
+ * The one deck with no tag behind it. Its entries come from the learner's own
+ * record, so they are worked out where the stats live, not here.
+ */
+export const WEAKEST_DECK = {
+  id: 'svagast',
+  name: 'Svagast',
+  description: 'The words you miss most',
+} as const;
+
 const byId = new Map(ALL_ENTRIES.map((entry) => [entry.id, entry]));
 
 /**
@@ -45,6 +55,12 @@ export function getEntry(id: string, userEntries: readonly WordEntry[] = []): Wo
 
 export function getDeck(deckId: string): BuiltinDeck | undefined {
   return BUILTIN_DECKS.find((deck) => deck.id === deckId);
+}
+
+/** The name to show for a deck id, the generated one included. */
+export function deckDisplayName(deckId: string): string {
+  if (deckId === WEAKEST_DECK.id) return WEAKEST_DECK.name;
+  return getDeck(deckId)?.name ?? deckId;
 }
 
 export function entriesForDeck(deckId: string, userEntries: readonly WordEntry[] = []): WordEntry[] {

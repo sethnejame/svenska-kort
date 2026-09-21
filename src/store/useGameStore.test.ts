@@ -386,6 +386,52 @@ describe('useGameStore scheduling', () => {
   });
 });
 
+describe('useGameStore weakest deck', () => {
+  beforeEach(() => {
+    useGameStore.setState({ ...INITIAL_GAME_STATE, rng: () => 0.5 });
+  });
+
+  it('plays only the words the learner has missed', () => {
+    const [first, second, third] = entriesForDeck('fraser');
+    if (!first || !second || !third) throw new Error('fixture');
+
+    useGameStore.setState({
+      stats: {
+        [first.id]: {
+          entryId: first.id,
+          seen: 4,
+          correct: 1,
+          wrong: 3,
+          lastSeenAt: '',
+          box: 1,
+          lastSeenSession: 0,
+        },
+        // Never missed, so it has no business in a repair session.
+        [second.id]: {
+          entryId: second.id,
+          seen: 4,
+          correct: 4,
+          wrong: 0,
+          lastSeenAt: '',
+          box: 4,
+          lastSeenSession: 0,
+        },
+      },
+    });
+
+    store().startSession('svagast', 0);
+
+    expect(store().pool).toEqual([first.id]);
+  });
+
+  it('ends at once when there is nothing to repair', () => {
+    store().startSession('svagast', 0);
+
+    expect(store().pool).toEqual([]);
+    expect(store().status).toBe('done');
+  });
+});
+
 describe('useGameStore persistence', () => {
   beforeEach(() => {
     localStorage.clear();

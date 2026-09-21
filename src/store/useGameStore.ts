@@ -7,7 +7,8 @@ import { checkAnswer, collectAllAnswers } from '../lib/checkAnswer';
 import { pointsFor } from '../lib/scoring';
 import { selectNext } from '../lib/selectNext';
 import { dueEntries, nextBox } from '../lib/leitner';
-import { entriesForDeck, getEntry } from '../data/decks';
+import { weakestEntries } from '../lib/weakest';
+import { entriesForDeck, getEntry, WEAKEST_DECK } from '../data/decks';
 import { useDeckStore } from './useDeckStore';
 import {
   consumeRecoveryFlag,
@@ -135,6 +136,17 @@ function addedEntries(): WordEntry[] {
   return useDeckStore.getState().userEntries;
 }
 
+/**
+ * What a deck offers this session. Every deck bar one is a tag over the
+ * library; `svagast` is assembled from the learner's own record, which is why
+ * it is worked out here rather than in the data module.
+ */
+function deckEntries(deckId: string, stats: Readonly<Record<string, WordStat>>): WordEntry[] {
+  const added = addedEntries();
+  if (deckId === WEAKEST_DECK.id) return weakestEntries(entriesForDeck('alla', added), stats);
+  return entriesForDeck(deckId, added);
+}
+
 function poolEntries(pool: readonly string[]): WordEntry[] {
   const added = addedEntries();
   const entries: WordEntry[] = [];
@@ -244,7 +256,7 @@ const createGame = (
 
   startSession: (deckId, now) => {
     const state = get();
-    const entries = entriesForDeck(deckId, addedEntries());
+    const entries = deckEntries(deckId, state.stats);
 
     const unfinished = state.endedAt === null && state.answered > 0;
 

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_ENTRIES, BUILTIN_DECKS, entriesForDeck, getDeck, getEntry } from './decks';
+import {
+  ALL_ENTRIES,
+  BUILTIN_DECKS,
+  deckDisplayName,
+  entriesForDeck,
+  getDeck,
+  getEntry,
+  WEAKEST_DECK,
+} from './decks';
 import { entriesFileSchema } from './schema';
 
 describe('seed entries', () => {
@@ -87,6 +95,17 @@ describe('lookups', () => {
   it('finds a deck by id and misses cleanly', () => {
     expect(getDeck('fraser')?.name).toBe('Fraser');
     expect(getDeck('ingen-lek')).toBeUndefined();
+  });
+
+  it('names the generated deck, which no tag would find', () => {
+    expect(getDeck(WEAKEST_DECK.id)).toBeUndefined();
+    expect(entriesForDeck(WEAKEST_DECK.id)).toEqual([]);
+    expect(deckDisplayName(WEAKEST_DECK.id)).toBe('Svagast');
+  });
+
+  it('names a builtin deck and falls back to the id it was given', () => {
+    expect(deckDisplayName('fraser')).toBe('Fraser');
+    expect(deckDisplayName('ingen-lek')).toBe('ingen-lek');
   });
 
   it('resolves every builtin deck tag against real entries', () => {

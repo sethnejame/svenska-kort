@@ -110,6 +110,39 @@ describe('Decks', () => {
     }
   });
 
+  it('hides the weakest deck until something has been missed', () => {
+    useGameStore.setState({ stats: mastered('fraser', 2) });
+    renderDecks();
+
+    expect(screen.queryByText('Svagast')).not.toBeInTheDocument();
+  });
+
+  it('offers the weakest deck first, counting only the missed words', () => {
+    const missed: Record<string, WordStat> = {};
+    for (const entry of entriesForDeck('fraser').slice(0, 3)) {
+      missed[entry.id] = {
+        entryId: entry.id,
+        seen: 4,
+        correct: 1,
+        wrong: 3,
+        lastSeenAt: '',
+        box: 1,
+        lastSeenSession: 0,
+      };
+    }
+    useGameStore.setState({ stats: missed });
+    renderDecks();
+
+    const tile = screen.getByText('Svagast').closest('a');
+    expect(tile).not.toBeNull();
+    if (tile) {
+      expect(tile).toHaveAttribute('href', '/play/svagast');
+      expect(within(tile).getByText('3 av 3 ord att öva nu')).toBeInTheDocument();
+    }
+    // It leads, because a learner who has something to repair should see it.
+    expect(screen.getAllByRole('link')[0]).toBe(tile);
+  });
+
   it('routes to the deck that was tapped', async () => {
     const user = userEvent.setup();
     renderDecks();
