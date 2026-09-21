@@ -17,6 +17,7 @@
 }
 
 .band {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -24,6 +25,40 @@
   justify-content: center;
   border-radius: var(--r-card);
   touch-action: pan-y;
+}
+
+/* Over the card's top-right corner rather than in the action row, which is
+   already three buttons wide at 375px. */
+.speak {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--c-sunken);
+  color: var(--c-ink-soft);
+  cursor: pointer;
+}
+
+.speak:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.speak:active {
+  color: var(--c-primary);
+}
+
+.speechError {
+  margin: 0;
+  color: var(--c-wrong);
+  font-size: 0.8125rem;
+  text-align: center;
 }
 
 .pulse {

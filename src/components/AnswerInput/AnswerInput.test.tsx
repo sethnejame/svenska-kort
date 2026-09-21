@@ -114,6 +114,44 @@ describe('AnswerInput', () => {
     expect(screen.queryByText('Du skrev')).not.toBeInTheDocument();
   });
 
+  it('hides the mic entirely when the browser cannot listen', () => {
+    render(<AnswerInput value="" onChange={noop} onSubmit={noop} />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('presses the mic while listening and calls back on tap', async () => {
+    const onDictate = vi.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <AnswerInput value="" onChange={noop} onSubmit={noop} onDictate={onDictate} />,
+    );
+
+    const mic = screen.getByRole('button', { name: 'Svara med rösten' });
+    expect(mic).toHaveAttribute('aria-pressed', 'false');
+    await user.click(mic);
+    expect(onDictate).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <AnswerInput value="" onChange={noop} onSubmit={noop} onDictate={onDictate} listening />,
+    );
+    const listening = screen.getByRole('button', { name: 'Lyssnar — tryck för att sluta' });
+    expect(listening).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('does not submit the form when the mic is tapped', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<AnswerInput value="" onChange={noop} onSubmit={onSubmit} onDictate={noop} />);
+
+    await user.click(screen.getByRole('button', { name: 'Svara med rösten' }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('disables the mic with the field', () => {
+    render(<AnswerInput value="" onChange={noop} onSubmit={noop} onDictate={noop} disabled />);
+    expect(screen.getByRole('button', { name: 'Svara med rösten' })).toBeDisabled();
+  });
+
   it('names the answer in the wrong announcement so the learner still learns it', () => {
     render(
       <AnswerInput value="" onChange={noop} onSubmit={noop} verdict="wrong" answer="decreased" />,

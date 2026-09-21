@@ -61,6 +61,56 @@
   font-weight: 400;
 }
 
+/* Inside the pill, so the field stays one row and the tap target does not
+   steal width from a placeholder that is already long. */
+.mic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin-right: calc(-1 * var(--space-2));
+  border: none;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--c-ink-soft);
+  cursor: pointer;
+}
+
+.mic:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.mic:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.listening {
+  background: var(--c-chip);
+  color: var(--c-primary);
+  animation: listening 1.4s ease-in-out infinite;
+}
+
+@keyframes listening {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* The chip colour still says it is listening without the pulse. */
+@media (prefers-reduced-motion: reduce) {
+  .listening {
+    animation: none;
+  }
+}
+
 .diff {
   display: flex;
   flex-direction: column;

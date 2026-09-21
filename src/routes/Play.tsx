@@ -7,6 +7,8 @@ import { ScoreStrip } from '../components/ScoreStrip/ScoreStrip';
 import { Confetti } from '../components/Confetti/Confetti';
 import { useGameStore } from '../store/useGameStore';
 import { useDeckStore } from '../store/useDeckStore';
+import { useSpeak } from '../hooks/useSpeak';
+import { useDictation } from '../hooks/useDictation';
 import { deckDisplayName, getEntry } from '../data/decks';
 import { scoreStore } from '../services/scoreStore';
 import { cx } from '../utils/cx';
@@ -18,6 +20,25 @@ const CORRECT_HOLD_MS = 600;
 /** A wrong answer holds so the learner reads it, then asks for Continue explicitly. */
 const REVEAL_HOLD_MS = 1200;
 const SWIPE_MIN_PX = 40;
+
+function SpeakerIcon() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 7.5h2.5L10 4.5v11L6.5 12.5H4z" />
+      <path d="M13 7.5a3.5 3.5 0 0 1 0 5M15.5 5a7 7 0 0 1 0 10" />
+    </svg>
+  );
+}
 
 export function Play() {
   const params = useParams<{ deckId?: string }>();
@@ -97,6 +118,24 @@ export function Play() {
     // Keyed on the id so a re-render cannot submit the same run twice.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastSessionId]);
+
+  const { supported: canSpeak, speak } = useSpeak();
+  // In reverse the Swedish is the answer, so hearing it before the card turns
+  // would simply read the answer out.
+  const canHear = !reverse || flipped;
+
+  const handleTranscript = useCallback(
+    (transcript: string) => {
+      setInput(transcript);
+    },
+    [setInput],
+  );
+
+  const dictation = useDictation({
+    // The learner speaks whatever the field is asking them to type.
+    lang: reverse ? 'sv-SE' : 'en-US',
+    onResult: handleTranscript,
+  });
 
   const advance = useCallback(() => {
     continue_(Date.now());
@@ -205,6 +244,18 @@ export function Play() {
         {entry && (
           <Card entry={entry} flipped={flipped} onFlip={handleFlip} reverse={reverse} />
         )}
+        {entry && canSpeak && canHear && (
+          <button
+            type="button"
+            className={styles.speak}
+            onClick={() => {
+              speak(entry.swedish);
+            }}
+            aria-label={`Hör ${entry.swedish}`}
+          >
+            <SpeakerIcon />
+          </button>
+        )}
       </div>
 
       <AnswerInput
@@ -216,7 +267,17 @@ export function Play() {
         answer={answer}
         submitted={input}
         reverse={reverse}
+        {...(dictation.supported && {
+          onDictate: dictation.listening ? dictation.stop : dictation.start,
+          listening: dictation.listening,
+        })}
       />
+
+      {dictation.error !== null && (
+        <p className={styles.speechError} role="alert" lang="sv">
+          Rösten gick inte att läsa: {dictation.error}
+        </p>
+      )}
 
       {status === 'revealed' ? (
         <div className={styles.actions}>

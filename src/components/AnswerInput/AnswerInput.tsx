@@ -20,6 +20,9 @@ export interface AnswerInputProps {
   inputRef?: RefObject<HTMLInputElement | null>;
   /** Reverse mode: the field is asking for Swedish, and has to say so. */
   reverse?: boolean;
+  /** Absent when the browser cannot listen, which is most of them. */
+  onDictate?: () => void;
+  listening?: boolean;
 }
 
 /**
@@ -56,6 +59,25 @@ function VerdictIcon({ verdict }: { verdict: Verdict }) {
   return (
     <svg {...common}>
       <path d="M5 5 15 15M15 5 5 15" />
+    </svg>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="7.5" y="2" width="5" height="9" rx="2.5" />
+      <path d="M4.5 9a5.5 5.5 0 0 0 11 0M10 14.5V18" />
     </svg>
   );
 }
@@ -97,6 +119,8 @@ export function AnswerInput({
   submitted = '',
   inputRef,
   reverse = false,
+  onDictate,
+  listening = false,
 }: AnswerInputProps) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -131,6 +155,18 @@ export function AnswerInput({
           enterKeyHint="go"
           inputMode="text"
         />
+        {onDictate && (
+          <button
+            type="button"
+            className={cx(styles.mic, listening && styles.listening)}
+            onClick={onDictate}
+            disabled={disabled}
+            aria-pressed={listening}
+            aria-label={listening ? 'Lyssnar — tryck för att sluta' : 'Svara med rösten'}
+          >
+            <MicIcon />
+          </button>
+        )}
       </div>
 
       {diff && (

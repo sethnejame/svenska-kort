@@ -29,13 +29,34 @@ function showCard(entryId: string) {
   });
 }
 
+/** jsdom ships no speech synthesis, so a Swedish voice has to be invented. */
+function stubVoice(spoken: { text: string }[]) {
+  vi.stubGlobal('speechSynthesis', {
+    getVoices: () => [{ lang: 'sv-SE', name: 'Alva' }],
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    cancel: () => {},
+    speak: (utterance: { text: string }) => spoken.push(utterance),
+  });
+  vi.stubGlobal(
+    'SpeechSynthesisUtterance',
+    class {
+      lang = '';
+      rate = 1;
+      voice: unknown = null;
+      constructor(public text: string) {}
+    },
+  );
+}
+
 describe('Play', () => {
   beforeEach(() => {
-    useGameStore.setState({ rng: () => 0.5 });
+    useGameStore.setState({ rng: () => 0.5, reverse: false });
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('renders the deck name, a card and the three actions', () => {
@@ -203,6 +224,40 @@ describe('Play', () => {
 
     expect(useGameStore.getState().status).toBe('revealed');
     expect(useGameStore.getState().sessionScore).toBe(0);
+  });
+
+  it('offers no speaker when the browser has no Swedish voice', () => {
+    renderPlay();
+    showCard('minska-verb');
+    expect(screen.queryByRole('button', { name: /^Hör / })).not.toBeInTheDocument();
+  });
+
+  it('speaks the Swedish word from the card', async () => {
+    const spoken: { text: string }[] = [];
+    stubVoice(spoken);
+    const user = userEvent.setup();
+    renderPlay();
+    showCard('minska-verb');
+
+    await user.click(screen.getByRole('button', { name: 'Hör minskade' }));
+    expect(spoken).toHaveLength(1);
+    expect(spoken[0]).toMatchObject({ text: 'minskade' });
+  });
+
+  it('withholds the speaker in reverse until the card has been turned', () => {
+    stubVoice([]);
+    renderPlay();
+    act(() => {
+      useGameStore.setState({ reverse: true });
+    });
+    showCard('minska-verb');
+
+    expect(screen.queryByRole('button', { name: /^Hör / })).not.toBeInTheDocument();
+
+    act(() => {
+      useGameStore.setState({ flipped: true });
+    });
+    expect(screen.getByRole('button', { name: 'Hör minskade' })).toBeInTheDocument();
   });
 
   it('shows the Klart panel with the session summary when the deck runs out', () => {
