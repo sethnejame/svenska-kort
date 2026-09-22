@@ -33,6 +33,15 @@ export const SHARED_DECK_BYTES_MAX = 256 * 1024;
 export const TRANSFER_CODE_TTL_MS = 10 * 60 * 1000;
 
 /**
+ * How stale `device.last_seen_at` is allowed to get.
+ *
+ * A write-budget decision, not a precision one. Touching the row on every
+ * request would spend the 100,000 daily writes on a timestamp nobody reads to
+ * the minute; at one write per device per hour it costs 24.
+ */
+export const LAST_SEEN_INTERVAL_MS = 60 * 60 * 1000;
+
+/**
  * No `0/O`, no `1/I/L`. A transfer code gets read aloud and typed by hand, and
  * every ambiguous glyph turns into a support conversation.
  */

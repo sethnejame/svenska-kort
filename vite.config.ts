@@ -49,10 +49,30 @@ export default defineConfig({
     }),
   ],
   test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}', 'shared/**/*.test.ts', 'worker/**/*.test.ts'],
+    // Two projects because the Worker's tests cannot run in jsdom: the D1
+    // double in `worker/test/d1.ts` is built on `node:sqlite`, so the real
+    // migration runs against real SQLite, and jsdom cannot load a node builtin.
+    // Splitting the environments is also honest — the Worker has no DOM in
+    // production either.
+    projects: [
+      {
+        test: {
+          name: 'app',
+          environment: 'jsdom',
+          globals: true,
+          setupFiles: ['./src/test/setup.ts'],
+          include: ['src/**/*.test.{ts,tsx}', 'shared/**/*.test.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'worker',
+          environment: 'node',
+          globals: true,
+          include: ['worker/**/*.test.ts'],
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       // `shared` and `worker/src` join `src/lib` at 100%: one is the arithmetic

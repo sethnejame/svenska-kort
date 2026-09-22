@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { displayNameSchema, healthResponseSchema, normalizeDisplayName } from './api';
+import { z } from 'zod';
+import { displayNameSchema, firstIssue, healthResponseSchema, normalizeDisplayName } from './api';
 
 describe('normalizeDisplayName', () => {
   it('trims and collapses so the length both sides measure is the same one', () => {
@@ -42,6 +43,20 @@ describe('displayNameSchema', () => {
 
   it('accepts a name that is only digits, which is a real choice', () => {
     expect(displayNameSchema.safeParse('123').success).toBe(true);
+  });
+});
+
+describe('firstIssue', () => {
+  it('returns the message a learner can act on', () => {
+    const error = displayNameSchema.safeParse('A'.repeat(21)).error;
+    expect(error).toBeDefined();
+    expect(firstIssue(error as z.ZodError)).toMatch(/högst 20 tecken/);
+  });
+
+  it('falls back rather than returning undefined when there are no issues', () => {
+    // zod does not produce an issue-free error, but the fallback is cheaper to
+    // write than to prove impossible, and an empty message is a dead-end dialog.
+    expect(firstIssue(new z.ZodError([]))).toBe('Något i formuläret gick inte att läsa.');
   });
 });
 

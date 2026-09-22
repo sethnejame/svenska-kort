@@ -23,10 +23,14 @@ VERSION = "dev"
 # database_id comes from `wrangler d1 create svenska-kort-staging`. It is an
 # account-scoped uuid, not a secret, and belongs in the repo so a deploy is
 # reproducible.
+#
+# The binding stays `DB` in every environment even though `d1 create` suggests
+# naming it after the database. Handlers then read `env.DB` and contain no
+# knowledge of which environment they are running in.
 [[env.staging.d1_databases]]
 binding = "DB"
 database_name = "svenska-kort-staging"
-database_id = "REPLACE_WITH_STAGING_DATABASE_ID"
+database_id = "458b2b74-3445-430c-a5b6-a42f221fc12c"
 migrations_dir = "migrations"
 
 [env.production]
@@ -38,5 +42,5 @@ VERSION = "dev"
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "svenska-kort-prod"
-database_id = "REPLACE_WITH_PROD_DATABASE_ID"
+database_id = "6f994f9a-66b4-4b61-918f-ec3543bff00d"
 migrations_dir = "migrations"

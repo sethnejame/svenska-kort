@@ -7,7 +7,10 @@
     "lib": ["ES2022"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["@cloudflare/workers-types", "vitest/globals"],
+    // `node` is here only for `worker/test/`, which builds the D1 double on
+    // `node:sqlite`. Nothing under `src/` may import a node module — the Worker
+    // runtime has none — and lint enforces that separately.
+    "types": ["@cloudflare/workers-types", "vitest/globals", "node"],
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -22,5 +25,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "../shared"]
+  "include": ["src", "test", "../shared"]
 }
