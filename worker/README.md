@@ -61,13 +61,36 @@ Neither value belongs anywhere in the repo.
 
 | Secret | What it is |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | A **scoped** token: `Workers Scripts:Edit` and `D1:Edit`, on this account only. Never an account-wide key. |
+| `CLOUDFLARE_API_TOKEN` | A scoped token — see below. Never an account-wide API key. |
 | `CLOUDFLARE_ACCOUNT_ID` | The account id from the Cloudflare dashboard. Not secret, but kept alongside the token so neither is committed. |
+
+### The token's scope
+
+Built from the **Edit Cloudflare Workers** template rather than hand-rolled: a
+token carrying only `Workers Scripts:Edit` cannot resolve the account and fails
+the deploy with an error that does not say so. The template's reads are what
+make `wrangler deploy` work at all.
+
+Two settings matter more than the permission list:
+
+- **Account Resources** — `Include` → this account only, never *All accounts*.
+- **Zone Resources** — none. The template asks for `Workers Routes:Edit`, which
+  is zone-scoped; delete that row. `svenskakort.se` is not a Cloudflare zone
+  (it is registered elsewhere and served by GitHub Pages), and the Worker lives
+  on `workers.dev`, so nothing here needs a zone.
+
+`D1:Edit` has to be present — add it if the template omits it, because P02
+onwards cannot migrate without it.
+
+The resulting token also carries KV, R2, Pages, Tail and Observability edit
+rights. That is wider than this project uses, and is accepted deliberately:
+those products are empty on this account, so there is nothing to damage, and
+trimming further is the common cause of a deploy that fails obscurely.
 
 ### Rotating the token
 
-1. Create the replacement in the Cloudflare dashboard under **My Profile → API
-   Tokens**, with the same two scopes.
+1. Create the replacement under **My Profile → API Tokens**, following the
+   scope above.
 2. Update `CLOUDFLARE_API_TOKEN` in **Settings → Secrets and variables →
    Actions** on the GitHub repo.
 3. Re-run the workflow to confirm the new token deploys.
