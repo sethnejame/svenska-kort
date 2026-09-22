@@ -105,13 +105,18 @@ a commit, or a log.
 because the bearer token is a credential. Adding an origin — a new domain, a
 preview environment — means editing that array and nothing else.
 
-## Setup still to do
+## The deployed Workers
 
-P01 stops short of a live deploy on purpose. To finish it:
+| Environment | Origin |
+| --- | --- |
+| staging | `https://svenska-kort-api-staging.seth-7b6.workers.dev` |
+| production | not deployed — P15 promotes it |
 
-1. Create a Cloudflare account (no card required for the free plan).
-2. Create the scoped API token and add both secrets to the GitHub repo.
-3. Push; the workflow deploys the staging Worker.
-4. Put the deployed origin in `.env.production` as `VITE_API_BASE`.
-5. Confirm `GET /api/health` from the deployed app, and confirm a request from
-   an unlisted origin is refused.
+`.env.production` points the app at **staging**, because staging is the only
+origin that exists yet. P15 swaps it.
+
+Verified against the live staging Worker at P01: a browser on an allowlisted
+origin reads `/api/health`, and one on an unlisted origin is refused by the
+CORS check rather than by the network — the same request in `mode: 'no-cors'`
+still reaches the Worker, which is what proves the refusal is the allowlist
+doing its job.
