@@ -3,7 +3,8 @@
 The API behind phase 3. A plain Cloudflare Worker: no framework, one hand-rolled
 router in `src/router.ts`, and an origin-locked CORS allowlist in `src/cors.ts`.
 
-At P01 it serves exactly one route, `GET /api/health`. There is no database yet.
+At P02 it serves one route, `GET /api/health`, against a D1 schema that no
+handler reads yet.
 
 ## Layout
 
@@ -40,6 +41,80 @@ Verify the Worker directly:
 ```
 curl -s -H 'Origin: https://svenskakort.se' http://localhost:8787/api/health
 ```
+
+## The database
+
+D1, bound as `DB` in every environment. Local development uses miniflare's own
+SQLite file under `worker/.wrangler/`, which never contacts Cloudflare — so the
+`database_id` on the top-level binding is the literal string `local` and is not
+resolved.
+
+```
+npm run db:migrate:local    # apply migrations to the local SQLite file
+npm run db:verify:local     # assert the schema is really there
+npm run db:seed:local       # fixture devices, sessions and a flagged row
+npm run db:rollback:local   # drop everything 0001 created
+```
+
+### Creating the remote databases
+
+Needed once, with `wrangler login` or a token in the environment. The printed
+`database_id` is an account-scoped uuid, not a secret, and belongs in
+`wrangler.toml` so a deploy is reproducible.
+
+```
+npx wrangler d1 create svenska-kort-staging
+npx wrangler d1 create svenska-kort-prod
+```
+
+Put each id in the matching `[[env.*.d1_databases]]` block, replacing
+`REPLACE_WITH_STAGING_DATABASE_ID` and `REPLACE_WITH_PROD_DATABASE_ID`.
+
+### Migrations
+
+`migrations/` is applied in filename order by `wrangler d1 migrations apply`.
+Two directories deliberately sit outside it, because wrangler applies
+*everything* in `migrations/`:
+
+- `migrations-down/` — rollback scripts, run explicitly. A down-migration beside
+  its up-migration is one `migrations apply` away from dropping the schema.
+- `seeds/` — dev fixtures. There is no `db:seed:staging` or `db:seed:prod`
+  script on purpose: the thing keeping fixtures out of a real database should be
+  that no command exists to put them there.
+
+CI applies migrations to staging **before** deploying, then runs
+`npm run db:verify:staging`. That second step is not belt-and-braces:
+`d1 migrations apply` has a history of exiting 0 in GitHub Actions having
+applied nothing, so the exit code is not the check. The verification queries
+`sqlite_master` and fails the job naming any missing table or index.
+
+### Why the indexes look the way they do
+
+Two of them are partial (`WHERE flags IS NULL`) and there is one more than the
+obvious count, because the snapshot builder must read a *bounded* number of rows.
+Selecting one row per device with `GROUP BY device_id` / `MAX(score)` needs a
+temp B-tree, which is a full pass over the season. Measured locally:
+
+| sessions in table | bounded read | `GROUP BY` |
+| --- | --- | --- |
+| 20,000 | 3,770 steps | 170,378 steps |
+| 120,000 | 3,770 steps | 1,020,378 steps |
+
+The bounded read is flat; the `GROUP BY` is linear. At 120k sessions rebuilding
+two scopes every 10 minutes, the `GROUP BY` costs roughly 35M rows read per day
+against a 5M daily cap — so it would not merely be slow, it would fail queries.
+The builder therefore selects in index order and collapses to one row per device
+in memory.
+
+`idx_session_alltime` exists because the all-time scope does not filter on
+season and so cannot use an index leading with `season_id`.
+
+**One query reports `SCAN` and is still correct**: the all-time snapshot build
+says `SCAN session USING INDEX idx_session_alltime`. It has no temp B-tree, so
+it walks the index in score order and stops at its `LIMIT` — the measured cost
+is identical at 20k and 120k rows. This is the one documented exception to
+"`SCAN` does not merge"; the rule's purpose is to catch unbounded reads, and
+this read is bounded. Any *other* `SCAN` still does not merge.
 
 ## Deploying
 
