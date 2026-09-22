@@ -26,6 +26,15 @@ export const DECK_ENTRIES_MAX = 500;
 /** One session is ~4 KB; the cap is refused at the edge before any parsing. */
 export const SESSION_ANSWERS_MAX = 500;
 export const SESSION_BYTES_MAX = 64 * 1024;
+
+/**
+ * The outer bound on any single duration the client reports.
+ *
+ * Not a plausibility check — that is the Worker's job and it flags rather than
+ * rejects. This only keeps a number large enough to break the arithmetic out of
+ * the handler in the first place.
+ */
+export const DAY_MS = 86_400_000;
 export const SUGGESTION_BYTES_MAX = 8 * 1024;
 export const SHARED_DECK_BYTES_MAX = 256 * 1024;
 

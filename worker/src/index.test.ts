@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import worker, { type Env } from './index';
-import { healthResponseSchema, meResponseSchema } from '../../shared/api';
+import {
+  healthResponseSchema,
+  meResponseSchema,
+  submitSessionResponseSchema,
+} from '../../shared/api';
+import { SESSION_BYTES_MAX } from '../../shared/constants';
 import { TestD1 } from '../test/d1';
 
 const ALLOWED = 'https://svenskakort.se';
@@ -179,5 +184,120 @@ describe('/api/me', () => {
   it('never puts the token in a response body', async () => {
     const response = await authed('/api/me');
     expect(await response.text()).not.toContain(TOKEN);
+  });
+});
+
+describe('POST /api/session', () => {
+  function body(count: number, over: Record<string, unknown> = {}) {
+    const answers = Array.from({ length: count }, (_, i) => ({
+      entryId: `entry-${i}`,
+      verdict: 'correct',
+      elapsedMs: 5000,
+      wasTyped: true,
+      acceptedOnRetry: false,
+    }));
+
+    return JSON.stringify({
+      sessionId: 'session-1',
+      deckId: 'nyheter',
+      startedAt: new Date(Date.now() - count * 5000).toISOString(),
+      endedAt: new Date().toISOString(),
+      answers,
+      claimedScore: 0,
+      claimedBestStreak: 0,
+      ...over,
+    });
+  }
+
+  function submit(payload: string, token: string | null = TOKEN) {
+    return authed('/api/session', { method: 'POST', body: payload }, token);
+  }
+
+  it('answers the shape the shared schema describes', async () => {
+    const response = await submit(body(10));
+    expect(response.status).toBe(200);
+
+    const parsed = submitSessionResponseSchema.parse(await response.json());
+    expect(parsed.answered).toBe(10);
+    expect(parsed.rank).toBeNull();
+  });
+
+  it('401s without a token, before reading the body', async () => {
+    const response = await submit(body(10), null);
+    expect(response.status).toBe(401);
+  });
+
+  it('403s a banned device', async () => {
+    await authed('/api/me');
+    db.seed('UPDATE device SET is_banned = 1');
+    expect((await submit(body(10))).status).toBe(403);
+  });
+
+  it('rejects 501 answers with a message the client can show', async () => {
+    const response = await submit(body(501));
+    expect(response.status).toBe(400);
+    expect((await response.json<{ error: string }>()).error).toMatch(/högst 500 svar/);
+  });
+
+  it('accepts 500 answers', async () => {
+    expect((await submit(body(500))).status).toBe(200);
+  });
+
+  it('refuses a body that declares itself larger than the cap', async () => {
+    const response = await authed('/api/session', {
+      method: 'POST',
+      body: body(10),
+      headers: { 'Content-Length': String(SESSION_BYTES_MAX + 1) },
+    });
+    expect(response.status).toBe(413);
+  });
+
+  it('rejects a session that ends in the future', async () => {
+    const response = await submit(
+      body(10, { endedAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() }),
+    );
+    expect(response.status).toBe(400);
+    expect((await response.json<{ error: string }>()).error).toMatch(/klocka/);
+  });
+
+  it('tolerates a clock a couple of minutes fast', async () => {
+    const response = await submit(
+      body(10, { endedAt: new Date(Date.now() + 2 * 60 * 1000).toISOString() }),
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it('400s a body that is not json rather than 500ing', async () => {
+    expect((await submit('not json')).status).toBe(400);
+  });
+
+  it('400s a body missing the fields it needs', async () => {
+    expect((await submit(JSON.stringify({ sessionId: 'x' }))).status).toBe(400);
+  });
+
+  it('is idempotent at the route level', async () => {
+    const payload = body(10);
+    const first = await (await submit(payload)).json();
+    const second = await (await submit(payload)).json();
+
+    expect(second).toEqual(first);
+    expect(db.read('SELECT id FROM session')).toHaveLength(1);
+  });
+
+  it('stores the computed score, not the claim', async () => {
+    const response = await submit(body(10, { claimedScore: 999_999 }));
+    const parsed = submitSessionResponseSchema.parse(await response.json());
+
+    expect(parsed.score).not.toBe(999_999);
+    const rows = db.read<{ score: number; claimed_score: number }>(
+      'SELECT score, claimed_score FROM session',
+    );
+    expect(rows[0]?.claimed_score).toBe(999_999);
+    expect(rows[0]?.score).toBe(parsed.score);
+  });
+
+  it('registers the device on a first-ever session, so a new install can submit', async () => {
+    expect((await submit(body(10))).status).toBe(200);
+    expect(db.read('SELECT id FROM device')).toHaveLength(1);
   });
 });

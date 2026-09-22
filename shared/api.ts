@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { DISPLAY_NAME_MAX, DISPLAY_NAME_MIN, FORBIDDEN_TEXT } from './constants';
+import {
+  DAY_MS,
+  DISPLAY_NAME_MAX,
+  DISPLAY_NAME_MIN,
+  FORBIDDEN_TEXT,
+  SESSION_ANSWERS_MAX,
+} from './constants';
 
 /**
  * The wire contract. The app and the Worker both import this file and neither
@@ -125,3 +131,73 @@ export const updateProfileSchema = z.object({
 });
 
 export type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
+
+// --- POST /api/session ------------------------------------------------------
+
+/** An id the client generated: a session uuid, a deck id, an entry slug. */
+const clientId = z.string().min(1).max(80);
+
+export const verdictSchema = z.enum(['correct', 'close', 'wrong']);
+
+/**
+ * One answer, as reported.
+ *
+ * `elapsedMs` is deliberately allowed to be negative and to be absurdly small.
+ * Both are nonsense, and rejecting them here would mean the `impossible-timing`
+ * flag could never fire — a tampered payload would 400 instead of being stored
+ * and quietly held off the leaderboard, which is the outcome worth having. The
+ * bounds that *are* enforced only stop a number large enough to break the
+ * arithmetic downstream.
+ */
+export const sessionAnswerSchema = z.object({
+  entryId: clientId,
+  verdict: verdictSchema,
+  elapsedMs: z.number().int().gte(-DAY_MS).lte(DAY_MS),
+  wasTyped: z.boolean(),
+  acceptedOnRetry: z.boolean(),
+});
+
+export const submitSessionSchema = z.object({
+  /** The idempotency key. The outbox retries blindly, and this is what makes that safe. */
+  sessionId: clientId,
+  deckId: clientId,
+  startedAt: z.string().datetime(),
+  endedAt: z.string().datetime(),
+  answers: z.array(sessionAnswerSchema).max(SESSION_ANSWERS_MAX, {
+    message: `En session kan innehålla högst ${SESSION_ANSWERS_MAX} svar.`,
+  }),
+  /** Recorded for audit and compared against the recomputed score. Never stored as the score. */
+  claimedScore: z.number().int().gte(0).lte(10_000_000),
+  claimedBestStreak: z.number().int().gte(0).lte(SESSION_ANSWERS_MAX),
+});
+
+export type SubmitSessionRequest = z.infer<typeof submitSessionSchema>;
+
+/**
+ * What the learner gets back: the server's arithmetic, and nothing about flags.
+ *
+ * A flagged session returns exactly this, with exactly these numbers. The
+ * learner is never told, because the checks have false positives and the honest
+ * fast learner must not be shown an accusation.
+ */
+export interface SubmitSessionResponse {
+  sessionId: string;
+  /** Server-computed. Differs from `claimedScore` whenever the client was wrong or lying. */
+  score: number;
+  answered: number;
+  correct: number;
+  bestStreak: number;
+  /** The device's running total after this session. */
+  totalScore: number;
+  rank: number | null;
+}
+
+export const submitSessionResponseSchema = z.object({
+  sessionId: z.string(),
+  score: z.number(),
+  answered: z.number(),
+  correct: z.number(),
+  bestStreak: z.number(),
+  totalScore: z.number(),
+  rank: z.number().nullable(),
+});

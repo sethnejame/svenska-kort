@@ -1,8 +1,15 @@
 import type { HealthResponse, MeResponse, Registration } from '../../shared/api';
-import { firstIssue, registrationSchema, updateProfileSchema } from '../../shared/api';
+import {
+  firstIssue,
+  registrationSchema,
+  submitSessionSchema,
+  updateProfileSchema,
+} from '../../shared/api';
+import { SESSION_BYTES_MAX } from '../../shared/constants';
 import { AuthError, requireDevice, type Device } from './auth';
 import { corsHeaders, preflight } from './cors';
 import { lookup, type Route } from './router';
+import { FUTURE_TOLERANCE_MS, submitSession } from './session';
 
 export interface Env {
   /** Set by wrangler from the deployed commit; `dev` when running locally. */
@@ -56,6 +63,19 @@ async function registrationHint(request: Request): Promise<Registration | undefi
   }
 }
 
+/**
+ * Refuses an oversized body before anything parses it.
+ *
+ * `Content-Length` is the client's claim, but it is the claim that decides
+ * whether the Worker spends CPU on `JSON.parse`, and a 500-answer session is
+ * ~15 KB against a 64 KB cap. A body that lies about its length still hits the
+ * answer-count cap in the schema.
+ */
+function tooLarge(request: Request, max: number): boolean {
+  const declared = Number(request.headers.get('Content-Length') ?? '0');
+  return Number.isFinite(declared) && declared > max;
+}
+
 const routes: readonly Route<Env>[] = [
   {
     method: 'GET',
@@ -101,6 +121,34 @@ const routes: readonly Route<Env>[] = [
         displayName: parsed.data.displayName,
         avatarSeed: parsed.data.avatarSeed,
       });
+    },
+  },
+  {
+    method: 'POST',
+    path: '/api/session',
+    handler: async (request, env) => {
+      // Auth before the body. A junk token is refused without a D1 read and
+      // without a byte of JSON parsed, which is the order that makes an
+      // anonymous flood cheap to absorb.
+      const device = await requireDevice(request, deps(env));
+
+      if (tooLarge(request, SESSION_BYTES_MAX)) {
+        return fail(request, 413, 'Sessionen är för stor.');
+      }
+
+      const parsed = submitSessionSchema.safeParse(await request.json().catch(() => null));
+      if (!parsed.success) return fail(request, 400, firstIssue(parsed.error));
+
+      // The one clock check that rejects rather than flags. A session ending in
+      // the future would be filed into a season that has not started, which no
+      // later snapshot would ever pick up — so it has to be refused at the door
+      // rather than stored where nothing would read it.
+      const now = Date.now();
+      if (Date.parse(parsed.data.endedAt) > now + FUTURE_TOLERANCE_MS) {
+        return fail(request, 400, 'Sessionen slutar i framtiden. Kontrollera enhetens klocka.');
+      }
+
+      return json(request, await submitSession(parsed.data, device, { db: env.DB, now }));
     },
   },
 ];

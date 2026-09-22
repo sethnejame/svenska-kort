@@ -116,6 +116,50 @@ is identical at 20k and 120k rows. This is the one documented exception to
 "`SCAN` does not merge"; the rule's purpose is to catch unbounded reads, and
 this read is bounded. Any *other* `SCAN` still does not merge.
 
+### Query plans per endpoint
+
+`POST /api/session` (P04). Two rows written, both through the primary key:
+
+```
+session replay read-back
+  SEARCH s USING INDEX sqlite_autoindex_session_1 (id=?)
+  SEARCH d USING INDEX sqlite_autoindex_device_1 (id=?)
+
+device credit guard
+  SEARCH device USING INDEX sqlite_autoindex_device_1 (id=?)
+  SCALAR SUBQUERY 1
+  SEARCH session USING COVERING INDEX sqlite_autoindex_session_1 (id=?)
+```
+
+`GET /api/me` (P03):
+
+```
+SEARCH device USING INDEX sqlite_autoindex_device_2 (token_hash=?)
+```
+
+### Why the session write is one batch, in that order
+
+The credit runs *before* the insert and is guarded on the session row not
+existing yet:
+
+```sql
+UPDATE device SET total_score = total_score + ?, ...
+ WHERE id = ? AND NOT EXISTS (SELECT 1 FROM session WHERE id = ?)
+```
+
+That ordering is the idempotency mechanism. The outbox retries without knowing
+whether the first attempt landed, so a replay has to be a success that changes
+nothing: the session row already exists, `NOT EXISTS` is false, the credit is
+skipped, and the batch writes zero rows.
+
+An earlier version guarded on the stored `created_at` matching the request's
+own, which collides whenever a retry lands in the same millisecond — and a
+double-credited total is a number nothing ever goes back and corrects. The
+current guard involves no clock.
+
+Both statements go in one `db.batch()`, which is one D1 transaction, so a
+session can never be stored without its credit.
+
 ## Deploying
 
 `.github/workflows/deploy-worker.yml` deploys to **staging** on any push to
