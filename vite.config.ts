@@ -52,10 +52,13 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'shared/**/*.test.ts', 'worker/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/lib/**'],
+      // `shared` and `worker/src` join `src/lib` at 100%: one is the arithmetic
+      // both sides depend on, the other is code no learner can reach to report
+      // a bug in.
+      include: ['src/lib/**', 'shared/**', 'worker/src/**'],
       thresholds: {
         lines: 100,
         functions: 100,

@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // No DOM: the Worker has `fetch`, `Request` and `crypto.subtle`, and none of
+    // `window`, `document` or `localStorage`. Leaving DOM out makes reaching for
+    // one a compile error rather than a runtime crash in production.
+    "lib": ["ES2022"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "types": ["node", "vite/client", "vitest/globals", "@testing-library/jest-dom"],
+    "types": ["@cloudflare/workers-types", "vitest/globals"],
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -20,7 +22,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  // `worker` is absent on purpose: it compiles under `worker/tsconfig.json`,
-  // which has no DOM lib. `shared` is checked by both.
-  "include": ["src", "shared", "scripts", "tests", "vite.config.ts", "playwright.config.ts"]
+  "include": ["src", "../shared"]
 }

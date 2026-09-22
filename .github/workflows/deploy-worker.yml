@@ -1,0 +1,35 @@
+name: Deploy worker
+on:
+  push:
+    branches: [master]
+    # The app and the API deploy independently. Touching `shared/` is the one
+    # change that has to move both, because both compile it in.
+    paths:
+      - 'worker/**'
+      - 'shared/**'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: worker
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      # The same gate the app goes through: the Worker's typecheck, lint and
+      # tests are all inside `npm run check`.
+      - run: npm run check
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          # Staging on every push to master. Production is a tagged release,
+          # which P15 wires up once there is a database worth protecting.
+          command: deploy --env staging --var VERSION:${{ github.sha }}

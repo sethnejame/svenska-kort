@@ -1,0 +1,22 @@
+name = "svenska-kort-api"
+main = "src/index.ts"
+compatibility_date = "2026-09-21"
+
+# No `d1_databases` binding yet — P02 adds the schema and the databases. A
+# binding pointing at a database that does not exist fails the deploy, so it
+# arrives with the migration that creates it.
+
+[vars]
+VERSION = "dev"
+
+[env.staging]
+name = "svenska-kort-api-staging"
+
+[env.staging.vars]
+VERSION = "dev"
+
+[env.production]
+name = "svenska-kort-api"
+
+[env.production.vars]
+VERSION = "dev"

@@ -2,7 +2,9 @@ import type { WordEntry } from '../types/word';
 import { alternates, foldSwedish, normalize, normalizeSwedish } from './normalize';
 import { levenshtein } from './levenshtein';
 
-export type Verdict = 'correct' | 'close' | 'wrong';
+// Defined in `shared/` because the Worker prices verdicts it cannot grade.
+export type { Verdict } from '../../shared/verdict';
+import type { Verdict } from '../../shared/verdict';
 
 export interface AnswerVerdict {
   verdict: Verdict;

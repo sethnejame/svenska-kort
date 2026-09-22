@@ -23,6 +23,13 @@ blob-report/
 .env
 .env.*
 !.env.example
+# Committed on purpose: it holds only the public API origin, which is bundled
+# into a public app out of a public repo. No secret is ever read from here —
+# the Cloudflare token lives in GitHub Actions secrets and nowhere else.
+!.env.production
+
+# Wrangler's local state, which does contain credentials.
+.wrangler/
 
 # Logs
 *.log

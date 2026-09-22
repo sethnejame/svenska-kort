@@ -1,6 +1,13 @@
 name: Deploy
 on:
-  push: { branches: [master] }
+  push:
+    branches: [master]
+    # Ignore rather than allowlist: almost everything in the repo ends up in the
+    # app bundle, and a missed path here is a change that silently never ships.
+    # `shared/` is deliberately absent, so it deploys both this and the Worker.
+    paths-ignore:
+      - 'worker/**'
+      - '.github/workflows/deploy-worker.yml'
   workflow_dispatch:
 permissions:
   contents: read
