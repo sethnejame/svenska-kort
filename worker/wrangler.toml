@@ -4,6 +4,31 @@ compatibility_date = "2026-09-21"
 
 [vars]
 VERSION = "dev"
+# Set to "1" only if cron triggers turn out not to fire on this plan: a stale
+# board then gets rebuilt inline by whichever read notices, at the cost of that
+# one request's latency. `vars` is not inherited by `[env.*]`, so this has to be
+# repeated in the env block that needs it — which is the point, since it should
+# never be on in more than one place at a time.
+LAZY_SNAPSHOT = "0"
+
+# Rebuilds the snapshot and the histogram, which is also the staleness the board
+# is allowed — `SNAPSHOT_MAX_AGE_MS` is kept equal to this.
+#
+# Thirty minutes rather than the ten the ticket asked for, because writes are the
+# binding budget, not reads. A rebuild replaces ~163 rows per scope, so it costs
+# ~326 writes per scope, ~652 per run:
+#
+#   every 10 min → 144 runs → ~94k writes/day, against a 100k/day cap
+#   every 30 min →  48 runs → ~31k writes/day
+#
+# At ten minutes the cron alone consumes the write allowance and the next learner
+# to submit a session gets a failed query, which is the one outcome the whole
+# design is arranged to avoid. Reads are comfortable either way (~480k against 5M).
+#
+# `triggers` is an inheritable key, so this applies to staging and production
+# without being repeated.
+[triggers]
+crons = ["*/30 * * * *"]
 
 # The top-level binding is what `wrangler dev` and the tests use. Local D1 keeps
 # its own SQLite file under `.wrangler/` and never contacts Cloudflare, so the

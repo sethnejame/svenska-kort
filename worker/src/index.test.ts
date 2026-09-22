@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import worker, { type Env } from './index';
 import {
   healthResponseSchema,
+  leaderboardResponseSchema,
   meResponseSchema,
   submitSessionResponseSchema,
 } from '../../shared/api';
 import { SESSION_BYTES_MAX } from '../../shared/constants';
+import { seasonIdFor } from '../../shared/season';
 import { TestD1 } from '../test/d1';
 
 const ALLOWED = 'https://svenskakort.se';
@@ -17,12 +19,75 @@ let env: Env;
 beforeEach(() => {
   db = new TestD1();
   env = { VERSION: 'abc1234', DB: db as unknown as D1Database };
+  platform = context();
 });
+
+afterEach(() => {
+  uninstallCache();
+});
+
+/**
+ * The platform context, with `waitUntil` awaited rather than backgrounded.
+ *
+ * The real one lets a promise outlive the response; a test that did the same
+ * would finish before the cache write it is about to assert on. Collecting the
+ * promises here lets a test await them explicitly.
+ */
+function context() {
+  const pending: Promise<unknown>[] = [];
+  return {
+    ctx: { waitUntil: (promise: Promise<unknown>) => void pending.push(promise) },
+    settled: () => Promise.all(pending),
+  };
+}
+
+let platform: ReturnType<typeof context>;
+
+/** The global the Workers runtime provides and Node does not. */
+interface CacheGlobal {
+  caches?: { default?: Cache };
+}
+
+/**
+ * An in-memory stand-in for `caches.default`.
+ *
+ * Installed only by the tests that are about the cache. Everywhere else the
+ * global is absent, which is the uncached path — so the handler is exercised both
+ * ways without a flag.
+ */
+function installCache() {
+  const store = new Map<string, Response>();
+
+  (globalThis as CacheGlobal).caches = {
+    default: {
+      // `clone()` on the way out and in: a Response body is a stream, and handing
+      // the same one to two callers would leave the second with nothing.
+      match: (request: Request | string) => {
+        const hit = store.get(typeof request === 'string' ? request : request.url);
+        return Promise.resolve(hit === undefined ? undefined : hit.clone());
+      },
+      put: (request: Request | string, response: Response) => {
+        store.set(typeof request === 'string' ? request : request.url, response.clone());
+        return Promise.resolve();
+      },
+    } as unknown as Cache,
+  };
+
+  return store;
+}
+
+function uninstallCache() {
+  delete (globalThis as CacheGlobal).caches;
+}
 
 function call(path: string, init: RequestInit = {}, origin: string | null = ALLOWED) {
   const headers = new Headers(init.headers);
   if (origin !== null) headers.set('Origin', origin);
-  return worker.fetch(new Request(`https://api.test${path}`, { ...init, headers }), env);
+  return worker.fetch(
+    new Request(`https://api.test${path}`, { ...init, headers }),
+    env,
+    platform.ctx,
+  );
 }
 
 function authed(path: string, init: RequestInit = {}, token: string | null = TOKEN) {
@@ -38,6 +103,8 @@ describe('GET /api/health', () => {
     expect(healthResponseSchema.parse(await response.json())).toEqual({
       ok: true,
       version: 'abc1234',
+      // Never built, which is a different fact from "built and empty".
+      snapshotAgeSeconds: null,
     });
   });
 
@@ -85,7 +152,7 @@ describe('routing', () => {
       },
     } as Env;
 
-    const response = await worker.fetch(boom, broken);
+    const response = await worker.fetch(boom, broken, platform.ctx);
     expect(response.status).toBe(500);
     expect(await response.text()).not.toContain('secret table name');
   });
@@ -299,5 +366,298 @@ describe('POST /api/session', () => {
   it('registers the device on a first-ever session, so a new install can submit', async () => {
     expect((await submit(body(10))).status).toBe(200);
     expect(db.read('SELECT id FROM device')).toHaveLength(1);
+  });
+});
+
+/**
+ * Now, as the moment every seeded session was played.
+ *
+ * Relative rather than a fixed date, because the week scope files a session under
+ * the ISO week it ended in and the handler reads its own clock. A hard-coded
+ * timestamp would put these fixtures in a season the route stops asking about the
+ * following Monday.
+ */
+const PLAYED_AT = new Date().toISOString();
+const PLAYED_SEASON = seasonIdFor(Date.parse(PLAYED_AT));
+
+/**
+ * One device with one qualifying session, seeded directly.
+ *
+ * Direct rather than through `POST /api/session`, because the route computes the
+ * score from the answers and these tests are about the board rather than about
+ * scoring. `best_score` is set by hand for the same reason the route maintains
+ * it: it is what a rank outside the snapshot is measured against.
+ */
+function seedPlayer(index: number, score: number): string {
+  const id = `d${String(index).padStart(3, '0')}`;
+  const at = PLAYED_AT;
+
+  db.seed(
+    `INSERT INTO device (id, token_hash, display_name, avatar_seed, created_at,
+                         last_seen_at, best_score)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    id,
+    `hash-${id}`,
+    `Namn ${id}`,
+    `seed-${id}`,
+    at,
+    at,
+    score,
+  );
+  db.seed(
+    `INSERT INTO session (id, device_id, deck_id, season_id, started_at, ended_at,
+                          answered, correct, best_streak, score, claimed_score,
+                          timings, flags, created_at)
+     VALUES (?, ?, 'grund', ?, ?, ?, 10, 10, 5, ?, ?, '[]', NULL, ?)`,
+    `s-${id}`,
+    id,
+    PLAYED_SEASON,
+    at,
+    at,
+    score,
+    score,
+    at,
+  );
+
+  return id;
+}
+
+describe('GET /api/leaderboard', () => {
+  beforeEach(async () => {
+    for (let i = 0; i < 3; i += 1) seedPlayer(i, 900 - i * 100);
+    await worker.scheduled(null, env);
+  });
+
+  it('answers the shape the shared schema describes, unauthenticated', async () => {
+    const response = await call('/api/leaderboard');
+    expect(response.status).toBe(200);
+
+    const body = leaderboardResponseSchema.parse(await response.json());
+    expect(body.scope).toBe('all-time');
+    expect(body.rows.map((row) => row.rank)).toEqual([1, 2, 3]);
+    expect(body.rows[0]?.score).toBe(900);
+    expect(body.ageSeconds).not.toBeNull();
+  });
+
+  it('carries no per-caller field, so one cached body is correct for everybody', async () => {
+    const body = await (await call('/api/leaderboard')).json<Record<string, unknown>>();
+    expect(Object.keys(body)).not.toContain('isMe');
+    expect(JSON.stringify(body)).not.toContain('isMe');
+  });
+
+  it('answers the week scope under its own season id', async () => {
+    const response = await call('/api/leaderboard?scope=week');
+    const body = leaderboardResponseSchema.parse(await response.json());
+
+    expect(body.scope).toBe('week');
+    expect(body.seasonId).toMatch(/^\d{4}-W\d{2}$/);
+  });
+
+  it('400s a scope it does not serve', async () => {
+    expect((await call('/api/leaderboard?scope=daily')).status).toBe(400);
+  });
+
+  it('400s a limit outside the range it will answer', async () => {
+    expect((await call('/api/leaderboard?limit=0')).status).toBe(400);
+    expect((await call('/api/leaderboard?limit=101')).status).toBe(400);
+  });
+
+  it('reads a bounded number of rows on a cache miss', async () => {
+    db.resetCounters();
+    await call('/api/leaderboard?limit=50');
+
+    // The board plus the one histogram row the age is read from.
+    expect(db.rowsRead).toBeLessThanOrEqual(51);
+  });
+
+  it('serves a second read from the cache at zero D1 rows', async () => {
+    installCache();
+
+    const first = await (await call('/api/leaderboard')).json();
+    // The write is handed to `waitUntil`, so it has to land before the next read.
+    await platform.settled();
+
+    db.resetCounters();
+    const second = await (await call('/api/leaderboard')).json();
+
+    expect(second).toEqual(first);
+    // The entire reason the cache is here: a hit spends none of the day's rows.
+    expect(db.rowsRead).toBe(0);
+  });
+
+  it('treats a differently ordered query string as the same cache entry', async () => {
+    installCache();
+    await call('/api/leaderboard?scope=week&limit=25');
+    await platform.settled();
+
+    db.resetCounters();
+    await call('/api/leaderboard?limit=25&scope=week');
+
+    expect(db.rowsRead).toBe(0);
+  });
+
+  it('keeps a bigger board out of a smaller one', async () => {
+    installCache();
+    await call('/api/leaderboard?limit=1');
+    await platform.settled();
+
+    const body = leaderboardResponseSchema.parse(
+      await (await call('/api/leaderboard?limit=50')).json(),
+    );
+    expect(body.rows).toHaveLength(3);
+  });
+
+  it('answers a cache hit with the calling origin, never the cached one', async () => {
+    installCache();
+    await call('/api/leaderboard');
+    await platform.settled();
+
+    const other = 'https://www.svenskakort.se';
+    const hit = await call('/api/leaderboard', {}, other);
+
+    // The stored body carries no CORS headers at all; they are applied per
+    // request. Serving the first caller's origin to the second is the bug.
+    expect(hit.headers.get('Access-Control-Allow-Origin')).toBe(other);
+  });
+
+  it('gives a disallowed origin no CORS header even on a cache hit', async () => {
+    installCache();
+    await call('/api/leaderboard');
+    await platform.settled();
+
+    const hit = await call('/api/leaderboard', {}, 'https://evil.example');
+    expect(hit.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
+  it('serves an uncached board where there is no Cache API', async () => {
+    // No `installCache()`: `caches` is absent, which is a runtime the Worker
+    // should still answer on. The only cost is rows.
+    const first = await call('/api/leaderboard');
+    db.resetCounters();
+    const second = await call('/api/leaderboard');
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(db.rowsRead).toBeGreaterThan(0);
+  });
+});
+
+describe('the snapshot rebuild', () => {
+  it('builds both scopes from the cron', async () => {
+    seedPlayer(0, 500);
+    await worker.scheduled(null, env);
+
+    const scopes = db.read<{ scope: string }>(
+      'SELECT DISTINCT scope FROM leaderboard_snapshot ORDER BY scope',
+    );
+    expect(scopes.map((row) => row.scope)).toEqual(['all-time', 'week']);
+  });
+
+  it('is not run by a leaderboard read by default', async () => {
+    seedPlayer(0, 500);
+    const body = leaderboardResponseSchema.parse(
+      await (await call('/api/leaderboard')).json(),
+    );
+
+    // With cron working, a read must not pay for a rebuild. An empty board and a
+    // null age is the honest answer before the first cron fires.
+    expect(body.rows).toEqual([]);
+    expect(body.ageSeconds).toBeNull();
+  });
+
+  it('is run inline by a read when LAZY_SNAPSHOT says cron does not fire', async () => {
+    seedPlayer(0, 500);
+    env.LAZY_SNAPSHOT = '1';
+
+    const body = leaderboardResponseSchema.parse(
+      await (await call('/api/leaderboard')).json(),
+    );
+    expect(body.rows).toHaveLength(1);
+  });
+
+  it('rebuilds a stale snapshot on the lazy path', async () => {
+    seedPlayer(0, 500);
+    await worker.scheduled(null, env);
+    // Older than `SNAPSHOT_MAX_AGE_MS` however long that is, without waiting.
+    db.seed(`UPDATE score_histogram SET built_at = '2020-01-01T00:00:00.000Z'`);
+    seedPlayer(1, 900);
+
+    env.LAZY_SNAPSHOT = '1';
+    const body = leaderboardResponseSchema.parse(
+      await (await call('/api/leaderboard')).json(),
+    );
+
+    expect(body.rows[0]?.score).toBe(900);
+  });
+
+  it('leaves a fresh snapshot alone on the lazy path', async () => {
+    seedPlayer(0, 500);
+    await worker.scheduled(null, env);
+    seedPlayer(1, 900);
+
+    env.LAZY_SNAPSHOT = '1';
+    const body = leaderboardResponseSchema.parse(
+      await (await call('/api/leaderboard')).json(),
+    );
+
+    // The second player is missing on purpose: the snapshot is minutes fresh, and
+    // rebuilding it on every read is the read pattern the lazy path exists to
+    // avoid rather than the one it introduces.
+    expect(body.rows).toHaveLength(1);
+  });
+
+  it('reports the snapshot age on health once something has been built', async () => {
+    seedPlayer(0, 500);
+    await worker.scheduled(null, env);
+
+    const body = healthResponseSchema.parse(await (await call('/api/health')).json());
+    // A number that climbs is how a cron that has quietly stopped firing becomes
+    // visible; null would only mean it never fired at all.
+    expect(body.snapshotAgeSeconds).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('rank on /api/me', () => {
+  it('reports the device its exact rank once it is on the board', async () => {
+    await authed('/api/me');
+    const [row] = db.read<{ id: string }>('SELECT id FROM device');
+    const id = row?.id ?? '';
+
+    db.seed(
+      `INSERT INTO session (id, device_id, deck_id, season_id, started_at, ended_at,
+                            answered, correct, best_streak, score, claimed_score,
+                            timings, flags, created_at)
+       VALUES ('s-me', ?, 'grund', ?, ?, ?, 10, 10, 5, 700, 700, '[]', NULL, ?)`,
+      id,
+      PLAYED_SEASON,
+      PLAYED_AT,
+      PLAYED_AT,
+      PLAYED_AT,
+    );
+    db.seed('UPDATE device SET best_score = 700 WHERE id = ?', id);
+    await worker.scheduled(null, env);
+
+    const body = meResponseSchema.parse(await (await authed('/api/me')).json());
+    expect(body.rank).toBe(1);
+  });
+
+  it('reports no rank for a learner who has not placed', async () => {
+    seedPlayer(0, 900);
+    await worker.scheduled(null, env);
+
+    // Null, not last: the board does not know about this device yet, and showing
+    // a position would claim otherwise.
+    const body = meResponseSchema.parse(await (await authed('/api/me')).json());
+    expect(body.rank).toBeNull();
+  });
+
+  it('costs a bounded read on top of the profile', async () => {
+    await authed('/api/me');
+    db.resetCounters();
+    await authed('/api/me');
+
+    // The device row, its snapshot lookup, and at most the histogram. The
+    // ticket's budget for a rank is 70 rows.
+    expect(db.rowsRead).toBeLessThanOrEqual(70);
   });
 });

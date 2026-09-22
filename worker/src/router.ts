@@ -7,10 +7,24 @@
  * wildcard, no nesting and no middleware stack, because nothing in this API
  * needs one.
  */
+/**
+ * What a handler gets of the platform beyond its bindings.
+ *
+ * Only `waitUntil`, because that is the only part any handler needs: the
+ * leaderboard writes to the edge cache after responding, and a learner should not
+ * wait on a cache write to see a board they already have. Narrowed to this rather
+ * than passing Cloudflare's `ExecutionContext` through, so a test supplies two
+ * lines instead of a platform object.
+ */
+export interface Ctx {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
 export type Handler<Env> = (
   request: Request,
   env: Env,
   params: Readonly<Record<string, string>>,
+  ctx: Ctx,
 ) => Response | Promise<Response>;
 
 export interface Route<Env> {

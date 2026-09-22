@@ -70,17 +70,39 @@ export const displayNameSchema = z
     message: 'Namnet måste innehålla en bokstav eller en siffra.',
   });
 
+// --- scopes -----------------------------------------------------------------
+
+/**
+ * Which board is being asked for.
+ *
+ * `week` is the current ISO week and `all-time` spans every season. A weekly
+ * reset is a new `season_id`, never a delete, so a botched season boundary is a
+ * display bug rather than lost history.
+ */
+export const scopeSchema = z.enum(['all-time', 'week']);
+
+export type Scope = z.infer<typeof scopeSchema>;
+
 // --- GET /api/health --------------------------------------------------------
 
 export interface HealthResponse {
   ok: true;
   /** The deployed commit, so a stale Worker is visible rather than guessed at. */
   version: string;
+  /**
+   * Age of the all-time snapshot, or null if it has never been built.
+   *
+   * Here for P14: a cron that has quietly stopped shows up as a number that
+   * keeps climbing, which is otherwise invisible until someone notices the
+   * leaderboard has not moved in a day.
+   */
+  snapshotAgeSeconds: number | null;
 }
 
 export const healthResponseSchema = z.object({
   ok: z.literal(true),
   version: z.string(),
+  snapshotAgeSeconds: z.number().nullable(),
 });
 
 // --- GET /api/me ------------------------------------------------------------
@@ -200,4 +222,60 @@ export const submitSessionResponseSchema = z.object({
   bestStreak: z.number(),
   totalScore: z.number(),
   rank: z.number().nullable(),
+});
+
+// --- GET /api/leaderboard ---------------------------------------------------
+
+export const leaderboardQuerySchema = z.object({
+  scope: scopeSchema,
+  /** Clamped server-side to the snapshot size; a larger number is not an error. */
+  limit: z.coerce.number().int().gte(1).lte(100),
+});
+
+/**
+ * One board row.
+ *
+ * Deliberately shaped like the app's existing `LeaderRow` minus `isMe`, which the
+ * client computes: the board response is shared by every caller and cached as one
+ * body, so a per-caller field cannot be baked into it. `deviceId` is what makes
+ * that computation possible.
+ */
+export interface LeaderboardRow {
+  rank: number;
+  deviceId: string;
+  displayName: string;
+  avatarSeed: string;
+  score: number;
+  bestStreak: number;
+  achievedAt: string;
+}
+
+export interface LeaderboardResponse {
+  scope: Scope;
+  /** The season these rows belong to; the empty string for `all-time`. */
+  seasonId: string;
+  rows: LeaderboardRow[];
+  /**
+   * How stale the board is. The client shows it rather than pretending the
+   * numbers are live — a leaderboard that claims to be current and is ten
+   * minutes old is worse than one that says how old it is.
+   */
+  ageSeconds: number | null;
+}
+
+export const leaderboardRowSchema = z.object({
+  rank: z.number(),
+  deviceId: z.string(),
+  displayName: z.string(),
+  avatarSeed: z.string(),
+  score: z.number(),
+  bestStreak: z.number(),
+  achievedAt: z.string(),
+});
+
+export const leaderboardResponseSchema = z.object({
+  scope: scopeSchema,
+  seasonId: z.string(),
+  rows: z.array(leaderboardRowSchema),
+  ageSeconds: z.number().nullable(),
 });

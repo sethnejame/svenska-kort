@@ -1,20 +1,46 @@
-import type { HealthResponse, MeResponse, Registration } from '../../shared/api';
+import type {
+  HealthResponse,
+  LeaderboardResponse,
+  MeResponse,
+  Registration,
+} from '../../shared/api';
 import {
   firstIssue,
+  leaderboardQuerySchema,
   registrationSchema,
   submitSessionSchema,
   updateProfileSchema,
 } from '../../shared/api';
 import { SESSION_BYTES_MAX } from '../../shared/constants';
 import { AuthError, requireDevice, type Device } from './auth';
+import { cachedResponse, cacheResponse, LEADERBOARD_MAX_AGE_SECONDS, leaderboardCacheKey } from './cache';
 import { corsHeaders, preflight } from './cors';
-import { lookup, type Route } from './router';
+import {
+  rankFor,
+  rebuildAll,
+  rebuildScope,
+  seasonForScope,
+  snapshotAgeSeconds,
+  SNAPSHOT_MAX_AGE_MS,
+  topRows,
+} from './leaderboard';
+import { lookup, type Ctx, type Route } from './router';
 import { FUTURE_TOLERANCE_MS, submitSession } from './session';
 
 export interface Env {
   /** Set by wrangler from the deployed commit; `dev` when running locally. */
   VERSION: string;
   DB: D1Database;
+  /**
+   * `"1"` turns on rebuilding the snapshot inline when a leaderboard read finds
+   * it stale, for a platform where cron triggers are unavailable.
+   *
+   * A var rather than a code path chosen at build time, so discovering that cron
+   * does not fire on this plan is a `wrangler.toml` edit and a redeploy, not a
+   * rewrite. Off by default: with cron working, this only adds tail latency to
+   * whichever unlucky request notices the staleness first.
+   */
+  LAZY_SNAPSHOT?: string;
 }
 
 function json(request: Request, body: unknown, status = 200): Response {
@@ -32,7 +58,7 @@ function fail(request: Request, status: number, error: string): Response {
   return json(request, { error }, status);
 }
 
-function meBody(device: Device): MeResponse {
+function meBody(device: Device, rank: number | null): MeResponse {
   return {
     deviceId: device.id,
     displayName: device.display_name,
@@ -41,10 +67,19 @@ function meBody(device: Device): MeResponse {
     createdAt: device.created_at,
     totalScore: device.total_score,
     bestStreak: device.best_streak,
-    // P05 fills this from the histogram. Null until then, and null forever for a
-    // learner who has not placed.
-    rank: null,
+    rank,
   };
+}
+
+/**
+ * The device's all-time rank.
+ *
+ * All-time rather than the current week because `MeResponse.rank` is one number
+ * and lifetime standing is the one a learner means by "my rank". `best_score` is
+ * the maintained counter, so this is two indexed reads and no aggregate.
+ */
+function myRank(device: Device, env: Env): Promise<number | null> {
+  return rankFor(device.id, device.best_score, 'all-time', { db: env.DB, now: Date.now() });
 }
 
 /**
@@ -80,8 +115,18 @@ const routes: readonly Route<Env>[] = [
   {
     method: 'GET',
     path: '/api/health',
-    handler: (request, env) => {
-      const body: HealthResponse = { ok: true, version: env.VERSION };
+    handler: async (request, env) => {
+      const body: HealthResponse = {
+        ok: true,
+        version: env.VERSION,
+        // One indexed row. A cron that has quietly stopped firing shows up here
+        // as a number that keeps climbing, which is otherwise invisible until
+        // someone notices the board has not moved all day.
+        snapshotAgeSeconds: await snapshotAgeSeconds('all-time', {
+          db: env.DB,
+          now: Date.now(),
+        }),
+      };
       return json(request, body);
     },
   },
@@ -90,7 +135,7 @@ const routes: readonly Route<Env>[] = [
     path: '/api/me',
     handler: async (request, env) => {
       const device = await requireDevice(request, deps(env));
-      return json(request, meBody(device));
+      return json(request, meBody(device, await myRank(device, env)));
     },
   },
   {
@@ -101,7 +146,7 @@ const routes: readonly Route<Env>[] = [
       // client that sends nothing still gets an account.
       const hint = await registrationHint(request);
       const device = await requireDevice(request, deps(env), hint);
-      return json(request, meBody(device));
+      return json(request, meBody(device, await myRank(device, env)));
     },
   },
   {
@@ -117,11 +162,16 @@ const routes: readonly Route<Env>[] = [
         .run();
 
       return json(request, {
-        ...meBody(device),
+        ...meBody(device, await myRank(device, env)),
         displayName: parsed.data.displayName,
         avatarSeed: parsed.data.avatarSeed,
       });
     },
+  },
+  {
+    method: 'GET',
+    path: '/api/leaderboard',
+    handler: (request, env, _params, ctx) => leaderboard(request, env, ctx),
   },
   {
     method: 'POST',
@@ -153,12 +203,75 @@ const routes: readonly Route<Env>[] = [
   },
 ];
 
+/**
+ * The board.
+ *
+ * Unauthenticated on purpose. The response is identical for every caller — `isMe`
+ * is the client's business — and that is exactly what lets one cached body serve
+ * everybody, which is what makes a hit cost zero D1 rows. Requiring a token here
+ * would buy nothing and would make the cache per-device.
+ */
+async function leaderboard(request: Request, env: Env, ctx: Ctx): Promise<Response> {
+  const url = new URL(request.url);
+  const parsed = leaderboardQuerySchema.safeParse({
+    scope: url.searchParams.get('scope') ?? 'all-time',
+    limit: url.searchParams.get('limit') ?? '50',
+  });
+  if (!parsed.success) return fail(request, 400, firstIssue(parsed.error));
+
+  const { scope, limit } = parsed.data;
+  const now = Date.now();
+  const seasonId = seasonForScope(scope, now);
+  const key = leaderboardCacheKey(scope, seasonId, limit);
+
+  const hit = await cachedResponse(key);
+  // Not `hit.headers` reused wholesale: the cached entry carries no CORS headers
+  // by design, so they are added here against *this* request's origin.
+  if (hit !== null) return withCors(request, hit);
+
+  const lbDeps = { db: env.DB, now };
+
+  // The fallback for a platform where cron triggers do not fire. Off unless
+  // `LAZY_SNAPSHOT` says otherwise, because with cron working this only makes one
+  // unlucky request pay for the rebuild.
+  if (env.LAZY_SNAPSHOT === '1') {
+    const age = await snapshotAgeSeconds(scope, lbDeps);
+    if (age === null || age * 1000 > SNAPSHOT_MAX_AGE_MS) await rebuildScope(scope, lbDeps);
+  }
+
+  const body: LeaderboardResponse = {
+    scope,
+    seasonId,
+    rows: await topRows(scope, limit, lbDeps),
+    ageSeconds: await snapshotAgeSeconds(scope, lbDeps),
+  };
+
+  const cacheable = new Response(JSON.stringify(body), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': `public, max-age=${LEADERBOARD_MAX_AGE_SECONDS}`,
+    },
+  });
+
+  // `clone()` because a Response body is a stream and can only be read once: the
+  // cache gets one copy and the learner gets the other.
+  ctx.waitUntil(cacheResponse(key, cacheable.clone()));
+  return withCors(request, cacheable);
+}
+
+/** The same body and status, with this request's CORS headers on it. */
+function withCors(request: Request, response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(corsHeaders(request))) headers.set(name, value);
+  return new Response(response.body, { status: response.status, headers });
+}
+
 function deps(env: Env) {
   return { db: env.DB, now: Date.now(), uuid: () => crypto.randomUUID() };
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: Ctx): Promise<Response> {
     if (request.method === 'OPTIONS') return preflight(request);
 
     const { matched, methodMismatch } = lookup(routes, request);
@@ -167,7 +280,7 @@ export default {
     }
 
     try {
-      return await matched.handler(request, env, matched.params);
+      return await matched.handler(request, env, matched.params, ctx);
     } catch (error) {
       // A refused credential is an expected outcome, not a failure, so it keeps
       // its status. Everything else collapses to 500 with nothing from the
@@ -176,5 +289,17 @@ export default {
       if (error instanceof AuthError) return fail(request, error.status, error.body);
       return fail(request, 500, 'Something went wrong');
     }
+  },
+
+  /**
+   * The snapshot rebuild, every ten minutes per `wrangler.toml`.
+   *
+   * Errors are deliberately not caught. A cron that fails silently is a
+   * leaderboard that quietly stops moving; letting it throw puts it in the
+   * Worker's error log, and `/api/health` reports the climbing snapshot age
+   * either way.
+   */
+  async scheduled(_event: unknown, env: Env): Promise<void> {
+    await rebuildAll({ db: env.DB, now: Date.now() });
   },
 };

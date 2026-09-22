@@ -1,10 +1,12 @@
 /**
  * A D1 double backed by real SQLite, for tests.
  *
- * It runs `migrations/0001_init.sql` — the actual file CI applies — against an
- * in-memory database via `node:sqlite`. So a test exercises real SQL against the
- * real schema: a typo in a column name, a missing index, or a constraint the
- * handler violates all fail here rather than in production.
+ * It runs every file in `migrations/` — the actual files CI applies, in the same
+ * filename order — against an in-memory database via `node:sqlite`. So a test
+ * exercises real SQL against the real schema: a typo in a column name, a missing
+ * index, or a constraint the handler violates all fail here rather than in
+ * production. A new migration is picked up by virtue of existing, so there is no
+ * list here to forget to update.
  *
  * It also counts statements and rows, because several phase 3 requirements are
  * budgets ("exactly 2 rows written per session", "a top-50 read costs ≤ 50
@@ -17,13 +19,21 @@
  * `worker/README.md`.
  */
 import { DatabaseSync, type StatementSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 // `.href` rather than the URL object: this file is compiled with both
 // `@cloudflare/workers-types` and `@types/node` in scope, whose `URL` types are
 // not assignable to one another, and the string overload sidesteps the clash.
-const MIGRATION = fileURLToPath(new URL('../migrations/0001_init.sql', import.meta.url).href);
+const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url).href);
+
+/** Filename order, which is the order `wrangler d1 migrations apply` uses. */
+function migrations(): string[] {
+  return readdirSync(MIGRATIONS_DIR)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+    .map((name) => readFileSync(MIGRATIONS_DIR + name, 'utf8'));
+}
 
 export interface QueryRecord {
   sql: string;
@@ -57,7 +67,7 @@ export class TestD1 {
     this.db = new DatabaseSync(':memory:');
     // The real thing, not a hand-maintained copy. If a migration breaks the
     // schema, every handler test fails and says so.
-    this.db.exec(readFileSync(MIGRATION, 'utf8'));
+    for (const sql of migrations()) this.db.exec(sql);
   }
 
   /** Total rows the Worker has read through this binding. */

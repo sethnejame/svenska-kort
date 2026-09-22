@@ -23,6 +23,8 @@ export interface Device {
   last_seen_at: string;
   total_score: number;
   best_streak: number;
+  /** Best *unflagged* session score, the input to histogram rank. Added by 0002. */
+  best_score: number;
   distinct_correct: number;
   decks_played: string;
 }
@@ -104,7 +106,8 @@ export async function requireDevice(
   const existing = await deps.db
     .prepare(
       `SELECT id, display_name, avatar_seed, is_admin, is_banned, created_at,
-              last_seen_at, total_score, best_streak, distinct_correct, decks_played
+              last_seen_at, total_score, best_streak, best_score,
+              distinct_correct, decks_played
          FROM device WHERE token_hash = ? LIMIT 1`,
     )
     .bind(tokenHash)
@@ -155,6 +158,7 @@ async function register(
     last_seen_at: iso,
     total_score: 0,
     best_streak: 0,
+    best_score: 0,
     distinct_correct: 0,
     decks_played: '[]',
   };
@@ -167,9 +171,9 @@ async function register(
   const inserted = await deps.db
     .prepare(
       `INSERT INTO device (id, token_hash, display_name, avatar_seed, is_admin, is_banned,
-                           created_at, last_seen_at, total_score, best_streak,
+                           created_at, last_seen_at, total_score, best_streak, best_score,
                            distinct_correct, decks_played)
-       VALUES (?, ?, ?, ?, 0, 0, ?, ?, 0, 0, 0, '[]')
+       VALUES (?, ?, ?, ?, 0, 0, ?, ?, 0, 0, 0, 0, '[]')
        ON CONFLICT(token_hash) DO NOTHING
        RETURNING id`,
     )
@@ -190,7 +194,8 @@ async function register(
   const winner = await deps.db
     .prepare(
       `SELECT id, display_name, avatar_seed, is_admin, is_banned, created_at,
-              last_seen_at, total_score, best_streak, distinct_correct, decks_played
+              last_seen_at, total_score, best_streak, best_score,
+              distinct_correct, decks_played
          FROM device WHERE token_hash = ? LIMIT 1`,
     )
     .bind(tokenHash)

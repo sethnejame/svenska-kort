@@ -149,15 +149,18 @@ CREATE TABLE usage (
 -- one leads with `season_id`, which is what lets the snapshot builder read a
 -- bounded number of rows in index order and stop at its LIMIT. Measured against
 -- a local fixture, the alternative — `GROUP BY device_id` with `MAX(score)` to
--- get one row per device — needs a temp B-tree and therefore a full pass over
--- the season:
+-- get one row per device, then `ORDER BY` that aggregate to take the top hundred
+-- — needs a temp B-tree and therefore a full pass over the season. (The ORDER BY
+-- is the part that needs the B-tree; the bare GROUP BY walks idx_session_device.
+-- Either way the aggregate is computed for every device before any LIMIT can
+-- apply, so the read is linear.)
 --
 --   sessions in table     bounded read    GROUP BY
 --   20,000                3,770 steps     170,378 steps
 --   120,000               3,770 steps   1,020,378 steps
 --
 -- The bounded read is flat; the GROUP BY is linear. At 120k sessions and a
--- 10-minute rebuild that is ~35M rows read per day against a 5M daily cap, so
+-- 30-minute rebuild that is ~12M rows read per day against a 5M daily cap, so
 -- the snapshot builder selects in index order and collapses to one row per
 -- device in memory instead. See `worker/src/leaderboard.ts`.
 --

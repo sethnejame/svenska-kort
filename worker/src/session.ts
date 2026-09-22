@@ -137,15 +137,22 @@ export async function submitSession(
   // request's, which collides whenever a retry lands in the same millisecond —
   // and a fragile guard here means a double-credited score that nothing ever
   // corrects. This version involves no clock at all.
+  // `best_score` feeds histogram rank, so a flagged session must not reach it —
+  // binding 0 leaves `MAX` with the existing value. `total_score` and
+  // `best_streak` are credited either way, because those are the learner's own
+  // stats and a flag only holds a session off the leaderboard.
+  const leaderboardScore = flags.length > 0 ? 0 : totals.score;
+
   const credit = deps.db
     .prepare(
       `UPDATE device
           SET total_score = total_score + ?,
-              best_streak = MAX(best_streak, ?)
+              best_streak = MAX(best_streak, ?),
+              best_score  = MAX(best_score, ?)
         WHERE id = ?
           AND NOT EXISTS (SELECT 1 FROM session WHERE id = ?)`,
     )
-    .bind(totals.score, totals.bestStreak, device.id, body.sessionId);
+    .bind(totals.score, totals.bestStreak, leaderboardScore, device.id, body.sessionId);
 
   const insert = deps.db
     .prepare(

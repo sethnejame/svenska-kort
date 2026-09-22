@@ -62,13 +62,21 @@ describe('firstIssue', () => {
 
 describe('healthResponseSchema', () => {
   it('accepts the shape the Worker returns', () => {
-    expect(healthResponseSchema.parse({ ok: true, version: 'abc1234' })).toEqual({
-      ok: true,
-      version: 'abc1234',
-    });
+    const body = { ok: true, version: 'abc1234', snapshotAgeSeconds: 42 };
+    expect(healthResponseSchema.parse(body)).toEqual(body);
+  });
+
+  it('accepts a null snapshot age, which is how "never built" is reported', () => {
+    // Distinct from zero: a cron that has never fired and one that fired this
+    // second are different problems, and only one of them is a problem.
+    const body = { ok: true, version: 'abc1234', snapshotAgeSeconds: null };
+    expect(healthResponseSchema.parse(body)).toEqual(body);
   });
 
   it('refuses a body that is merely truthy', () => {
-    expect(healthResponseSchema.safeParse({ ok: 'yes', version: 'abc1234' }).success).toBe(false);
+    expect(
+      healthResponseSchema.safeParse({ ok: 'yes', version: 'abc1234', snapshotAgeSeconds: 0 })
+        .success,
+    ).toBe(false);
   });
 });

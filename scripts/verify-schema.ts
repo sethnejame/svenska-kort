@@ -30,11 +30,25 @@ const EXPECTED_INDEXES = [
   'idx_session_device',
   'idx_session_leaderboard',
   'idx_shared_deck_device',
+  'idx_snapshot_device',
   'idx_suggestion_device',
   'idx_suggestion_status',
   'idx_transfer_device',
   'idx_transfer_expires',
 ] as const;
+
+/**
+ * Columns a later migration added with `ALTER TABLE`, grouped by table.
+ *
+ * Checked as well as the table list because an `ADD COLUMN` that did not apply
+ * looks exactly like one that did: the table is present either way, and the
+ * mismatch only surfaces when a handler binds a column that is not there. These
+ * are the columns with no `CREATE TABLE` of their own to vouch for them.
+ */
+const EXPECTED_COLUMNS: Readonly<Record<string, readonly string[]>> = {
+  device: ['best_score'],
+  score_histogram: ['built_at'],
+};
 
 type Target = 'local' | 'staging' | 'production';
 
@@ -97,6 +111,11 @@ const indexes = query(target, "SELECT name FROM sqlite_master WHERE type='index'
 const missing = [
   ...assertAllPresent('tables', EXPECTED_TABLES, tables),
   ...assertAllPresent('indexes', EXPECTED_INDEXES, indexes),
+  // `PRAGMA table_info` returns one row per column, each carrying `name`, which
+  // is the same shape `query` already reads.
+  ...Object.entries(EXPECTED_COLUMNS).flatMap(([table, columns]) =>
+    assertAllPresent(`${table} columns`, columns, query(target, `PRAGMA table_info(${table})`)),
+  ),
 ];
 
 if (missing.length > 0) {
