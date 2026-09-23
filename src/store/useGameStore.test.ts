@@ -609,8 +609,54 @@ describe('useGameStore persistence', () => {
       startedAt: new Date(0).toISOString(),
       endedAt: new Date(6100).toISOString(),
     });
+    // The per-answer record a remote submit would replay through
+    // `shared/scoring.ts` — one entry per card, all correct and typed.
+    expect(state.sessionHistory[0]?.answers).toHaveLength(6);
+    expect(
+      state.sessionHistory[0]?.answers?.every(
+        (answer) => answer.verdict === 'correct' && answer.wasTyped && !answer.acceptedOnRetry,
+      ),
+    ).toBe(true);
     expect(state.totalScore).toBe(state.sessionScore);
     expect(state.bestStreakEver).toBe(6);
+  });
+
+  it('records one answer per finished card, not the intermediate near-miss retry', () => {
+    store().startSession('fraser', 0);
+    trimPoolTo(3);
+
+    // First card: a near miss, then a correct retry.
+    const entry1 = current();
+    typeAndSubmit(typoOf(firstAnswer(entry1)), 1000);
+    expect(store().status).toBe('close');
+    typeAndSubmit(firstAnswer(entry1), 1200);
+    expect(store().status).toBe('correct');
+    store().continue_(1300);
+
+    // Second card: skipped outright.
+    store().skip(2000);
+    store().continue_(2100);
+
+    // Third card: peeked, then typed correctly — scores nothing, but still typed.
+    store().flip();
+    typeAndSubmit(firstAnswer(current()), 3000);
+
+    const { answersThisSession } = store();
+    expect(answersThisSession).toHaveLength(3);
+    expect(answersThisSession[0]).toMatchObject({ verdict: 'correct', acceptedOnRetry: true });
+    expect(answersThisSession[1]).toMatchObject({ verdict: 'wrong', wasTyped: true });
+    expect(answersThisSession[2]).toMatchObject({ verdict: 'correct', wasTyped: false });
+  });
+
+  it('keeps answersThisSession across a reload mid-run', () => {
+    store().startSession('fraser', 0);
+    answerCorrectly(1000);
+    store().continue_(1100);
+
+    reload();
+    store().startSession('fraser', 1200);
+
+    expect(store().answersThisSession).toHaveLength(1);
   });
 
   it('drops the oldest row when the 51st session lands', () => {

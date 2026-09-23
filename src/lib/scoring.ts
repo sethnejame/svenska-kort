@@ -4,4 +4,4 @@
  * paths unchanged; there is no second copy of the arithmetic.
  */
 export { multiplier, pointsFor } from '../../shared/scoring';
-export type { PointsInput } from '../../shared/scoring';
+export type { PointsInput, SessionAnswer } from '../../shared/scoring';

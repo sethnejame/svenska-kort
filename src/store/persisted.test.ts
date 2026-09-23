@@ -153,6 +153,7 @@ describe('withDefaults', () => {
       sessionScore: 0,
       answered: 0,
       correct: 0,
+      answersThisSession: [],
       startedAt: 0,
       endedAt: null,
     });

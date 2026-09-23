@@ -1,3 +1,5 @@
+import type { SessionAnswer } from '../lib/scoring';
+
 export interface Deck {
   id: string;
   name: string;
@@ -29,6 +31,12 @@ export interface SessionResult {
   correct: number;
   bestStreak: number;
   score: number;
+  /**
+   * Per-answer record, so a remote submit can be replayed and re-scored
+   * server-side. Absent on sessions banked before P06, and on an imported
+   * backup, neither of which is ever resubmitted.
+   */
+  answers?: (SessionAnswer & { entryId: string })[] | undefined;
 }
 
 export interface Profile {

@@ -1,5 +1,7 @@
 import type { PersistStorage, StorageValue } from 'zustand/middleware';
 import type { LeitnerBox, Profile, SessionResult, WordStat } from '../types/progress';
+import type { Verdict } from '../lib/checkAnswer';
+import type { SessionAnswer } from '../lib/scoring';
 import { MAX_INTERVAL } from '../lib/leitner';
 import { getItem, removeItem, setItem } from './storage';
 
@@ -68,6 +70,19 @@ const isWordStat = objectOf<StoredWordStat>({
   lastSeenSession: optional(isNumber),
 });
 
+const isVerdict = (value: unknown): value is Verdict =>
+  value === 'correct' || value === 'close' || value === 'wrong';
+
+type StoredAnswer = SessionAnswer & { entryId: string };
+
+const isSessionAnswer = objectOf<StoredAnswer>({
+  entryId: isString,
+  verdict: isVerdict,
+  elapsedMs: isNumber,
+  wasTyped: isBoolean,
+  acceptedOnRetry: isBoolean,
+});
+
 const isSessionResult = objectOf<SessionResult>({
   id: isString,
   deckId: isString,
@@ -77,6 +92,7 @@ const isSessionResult = objectOf<SessionResult>({
   correct: isNumber,
   bestStreak: isNumber,
   score: isNumber,
+  answers: optional(arrayOf(isSessionAnswer)),
 });
 
 const isProfile = objectOf<Profile>({
@@ -108,6 +124,7 @@ interface KnownFields {
   sessionScore?: number | undefined;
   answered?: number | undefined;
   correct?: number | undefined;
+  answersThisSession?: StoredAnswer[] | undefined;
   startedAt?: number | undefined;
   endedAt?: number | null | undefined;
 }
@@ -131,6 +148,7 @@ const isKnownFields = objectOf<KnownFields>({
   sessionScore: optional(isNumber),
   answered: optional(isNumber),
   correct: optional(isNumber),
+  answersThisSession: optional(arrayOf(isSessionAnswer)),
   startedAt: optional(isNumber),
   endedAt: optional(nullable(isNumber)),
 });
@@ -151,6 +169,7 @@ export interface PersistedGame {
   sessionScore: number;
   answered: number;
   correct: number;
+  answersThisSession: StoredAnswer[];
   startedAt: number;
   endedAt: number | null;
 }
@@ -227,6 +246,7 @@ export function withDefaults(persisted: PersistedState): PersistedGame {
     sessionScore: persisted.sessionScore ?? 0,
     answered: persisted.answered ?? 0,
     correct: persisted.correct ?? 0,
+    answersThisSession: persisted.answersThisSession ?? [],
     startedAt: persisted.startedAt ?? 0,
     endedAt: persisted.endedAt ?? null,
   };

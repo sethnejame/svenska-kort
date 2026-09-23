@@ -9,6 +9,7 @@ import {
   collectAllAnswers,
   collectAllSwedish,
 } from '../lib/checkAnswer';
+import type { SessionAnswer } from '../lib/scoring';
 import { pointsFor } from '../lib/scoring';
 import { selectNext } from '../lib/selectNext';
 import { dueEntries, nextBox } from '../lib/leitner';
@@ -47,6 +48,8 @@ export interface GameState {
   sessionScore: number;
   answered: number;
   correct: number;
+  /** Per-answer record for this run, so a remote submit can be replayed server-side. */
+  answersThisSession: (SessionAnswer & { entryId: string })[];
   recentIds: string[];
   promptShownAt: number;
   startedAt: number;
@@ -108,6 +111,7 @@ export const INITIAL_GAME_STATE: GameState = {
   sessionScore: 0,
   answered: 0,
   correct: 0,
+  answersThisSession: [],
   recentIds: [],
   promptShownAt: 0,
   startedAt: 0,
@@ -220,6 +224,7 @@ function finishSession(state: GameState, now: number): Partial<GameState> {
     correct: state.correct,
     bestStreak: state.bestStreakInSession,
     score: state.sessionScore,
+    answers: state.answersThisSession,
   };
 
   return {
@@ -254,11 +259,20 @@ function resolveCard(state: GameState, verdict: Verdict, now: number): Partial<G
   const entryId = state.currentId;
   if (entryId === null) return {};
 
+  const answer: SessionAnswer & { entryId: string } = {
+    entryId,
+    verdict,
+    elapsedMs: now - state.promptShownAt,
+    wasTyped: !state.peeked,
+    acceptedOnRetry: state.retryUsed,
+  };
+
   return {
     pool: state.pool.filter((id) => id !== entryId),
     answered: state.answered + 1,
     correct: state.correct + (verdict === 'correct' ? 1 : 0),
     stats: bumpStat(state.stats, entryId, verdict, now, state.sessionCount),
+    answersThisSession: [...state.answersThisSession, answer],
   };
 }
 
@@ -492,6 +506,7 @@ export const useGameStore = create<GameState & GameActions>()(
       sessionScore: state.sessionScore,
       answered: state.answered,
       correct: state.correct,
+      answersThisSession: state.answersThisSession,
       startedAt: state.startedAt,
       endedAt: state.endedAt,
     }),
