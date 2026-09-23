@@ -1,0 +1,68 @@
+.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-pill);
+  background: var(--c-card);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms var(--ease-spring);
+}
+
+.chip:hover {
+  background: var(--c-chip);
+  color: var(--c-primary);
+  transform: translateY(-1px);
+}
+
+.chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.chip:active {
+  transform: translateY(0);
+}
+
+.copied {
+  background: var(--c-correct);
+  border-color: var(--c-correct);
+  color: var(--c-bg);
+  font-size: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: background 160ms ease, color 160ms ease;
+  }
+
+  .chip:hover {
+    transform: none;
+  }
+}
+
+/* Announced state only — the chip itself already shows "Kopierat!" visually. */
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
