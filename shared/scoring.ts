@@ -2,7 +2,8 @@ import type { Verdict } from './verdict';
 
 const BASE_POINTS = 10;
 const SPEED_BONUS = 5;
-const SPEED_BONUS_UNDER_MS = 4000;
+/** Also the speed-demon badge's "under 4s" threshold — see `shared/badges.ts`. */
+export const SPEED_BONUS_UNDER_MS = 4000;
 const MAX_MULTIPLIER = 3;
 
 /** 1 + floor(streak / 5) * 0.5, capped at 3x. Answers 5-9 are worth 15, 25+ worth 30. */

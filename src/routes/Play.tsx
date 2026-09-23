@@ -3,6 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { Link, useParams } from 'react-router';
 import { Card } from '../components/Card/Card';
 import { AnswerInput } from '../components/AnswerInput/AnswerInput';
+import { SpecialChars } from '../components/SpecialChars/SpecialChars';
 import { ScoreStrip } from '../components/ScoreStrip/ScoreStrip';
 import { Confetti } from '../components/Confetti/Confetti';
 import { useGameStore } from '../store/useGameStore';
@@ -11,6 +12,7 @@ import { useSpeak } from '../hooks/useSpeak';
 import { useDictation } from '../hooks/useDictation';
 import { deckDisplayName, getEntry } from '../data/decks';
 import { scoreStore } from '../services/scoreStore';
+import { BADGE_META, type BadgeId } from '../../shared/badges';
 import { cx } from '../utils/cx';
 import styles from './Play.module.css';
 
@@ -20,6 +22,17 @@ const CORRECT_HOLD_MS = 600;
 /** A wrong answer holds so the learner reads it, then asks for Continue explicitly. */
 const REVEAL_HOLD_MS = 1200;
 const SWIPE_MIN_PX = 40;
+/** One of `Confetti`'s own milestones — the smallest, so a single badge burst
+ *  reads the same as a first in-session streak burst. */
+const BADGE_BURST_STREAK = 5;
+/** Must outlast `Confetti`'s own burst so the reset never clips the animation. */
+const BADGE_BURST_RESET_MS = 1200;
+
+/** `celebrateBadges` holds ids the Worker already validated against `BadgeId`,
+ *  so this is a lookup on trusted server data, not on parsed user input. */
+function badgeName(id: string): string {
+  return BADGE_META[id as BadgeId].name;
+}
 
 function SpeakerIcon() {
   return (
@@ -63,10 +76,15 @@ export function Play() {
   const skip = useGameStore((s) => s.skip);
   const continue_ = useGameStore((s) => s.continue_);
 
+  const celebrateBadges = useGameStore((s) => s.celebrateBadges);
+  const clearCelebration = useGameStore((s) => s.clearCelebration);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const swiped = useRef(false);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const [canContinue, setCanContinue] = useState(false);
+  const [shownBadges, setShownBadges] = useState<string[]>([]);
+  const [badgeBurst, setBadgeBurst] = useState(0);
 
   const userEntries = useDeckStore((s) => s.userEntries);
   const sessionHistory = useGameStore((s) => s.sessionHistory);
@@ -118,6 +136,25 @@ export function Play() {
     // Keyed on the id so a re-render cannot submit the same run twice.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastSessionId]);
+
+  // Best-effort: only fires if the outbox drain resolves while this screen is
+  // still mounted. `clearCelebration` empties the store's queue right away, so
+  // a later screen never re-shows the same badge — the local snapshot below is
+  // what the done screen actually renders.
+  useEffect(() => {
+    if (celebrateBadges.length === 0) return;
+    setShownBadges(celebrateBadges);
+    setBadgeBurst(BADGE_BURST_STREAK);
+    clearCelebration();
+  }, [celebrateBadges, clearCelebration]);
+
+  // Mirrors the in-play burst: jump to the milestone, then fall back off it so
+  // a later celebration in the same session can fire again.
+  useEffect(() => {
+    if (badgeBurst === 0) return;
+    const timer = setTimeout(() => setBadgeBurst(0), BADGE_BURST_RESET_MS);
+    return () => clearTimeout(timer);
+  }, [badgeBurst]);
 
   const { supported: canSpeak, speak } = useSpeak();
   // In reverse the Swedish is the answer, so hearing it before the card turns
@@ -201,6 +238,14 @@ export function Play() {
               <dd>{sessionScore}</dd>
             </div>
           </dl>
+
+          {shownBadges.length > 0 && (
+            <p className={styles.badgeLine} lang="sv">
+              Ny bricka: {shownBadges.map(badgeName).join(', ')}
+            </p>
+          )}
+          <Confetti streak={badgeBurst} />
+
           <Link
             to="/leaderboard"
             className={cx(styles.action, styles.primary, styles.doneLink)}
@@ -272,6 +317,8 @@ export function Play() {
           listening: dictation.listening,
         })}
       />
+
+      {reverse && status === 'prompt' && <SpecialChars />}
 
       {dictation.error !== null && (
         <p className={styles.speechError} role="alert" lang="sv">

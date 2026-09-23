@@ -281,4 +281,32 @@ describe('Play', () => {
       '/decks',
     );
   });
+
+  it('shows no badge line when nothing was earned this session', () => {
+    renderPlay();
+    act(() => {
+      useGameStore.setState({ status: 'done', celebrateBadges: [] });
+    });
+
+    expect(screen.queryByText(/Ny bricka/)).not.toBeInTheDocument();
+  });
+
+  it('celebrates a badge earned this session and clears it from the store', () => {
+    renderPlay();
+    act(() => {
+      useGameStore.setState({ status: 'done', celebrateBadges: ['first-session'] });
+    });
+
+    expect(screen.getByText('Ny bricka: Första steget')).toBeInTheDocument();
+    expect(useGameStore.getState().celebrateBadges).toEqual([]);
+  });
+
+  it('names every badge earned in the same session', () => {
+    renderPlay();
+    act(() => {
+      useGameStore.setState({ status: 'done', celebrateBadges: ['first-session', 'streak-10'] });
+    });
+
+    expect(screen.getByText('Ny bricka: Första steget, Tioslag')).toBeInTheDocument();
+  });
 });

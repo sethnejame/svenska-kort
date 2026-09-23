@@ -280,6 +280,7 @@ describe('POST /api/session', () => {
       answers,
       claimedScore: 0,
       claimedBestStreak: 0,
+      distinctCorrect: 0,
       ...over,
     });
   }
@@ -355,7 +356,8 @@ describe('POST /api/session', () => {
     const first = await (await submit(payload)).json();
     const second = await (await submit(payload)).json();
 
-    expect(second).toEqual(first);
+    // A replay always reports no new badges, even though the first attempt did.
+    expect(second).toEqual({ ...(first as object), badges: [] });
     expect(db.read('SELECT id FROM session')).toHaveLength(1);
   });
 

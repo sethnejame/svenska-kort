@@ -73,6 +73,12 @@ export interface GameState {
   totalScore: number;
   /** Set when the stored blob was unreadable and defaults were used. */
   storageRecovered: boolean;
+  /** Every badge id this device has ever seen confirmed by the Worker. Persisted as
+   *  the offline-fallback for the badge shelf when a remote read is unavailable. */
+  badges: string[];
+  /** Badge ids earned this app session but not yet shown. Never persisted: a
+   *  celebration is best-effort, and a reload must not resurface an old one. */
+  celebrateBadges: string[];
 }
 
 export interface GameActions {
@@ -94,6 +100,10 @@ export interface GameActions {
   }) => void;
   /** The recovery notice is persisted, so it needs an explicit way to go away. */
   dismissRecovery: () => void;
+  /** Records badges confirmed by the Worker. Genuinely new ones queue a celebration. */
+  awardBadges: (ids: string[]) => void;
+  /** Marks the queued celebration as shown, so a later screen does not repeat it. */
+  clearCelebration: () => void;
 }
 
 export const INITIAL_GAME_STATE: GameState = {
@@ -128,6 +138,8 @@ export const INITIAL_GAME_STATE: GameState = {
   bestStreakEver: 0,
   totalScore: 0,
   storageRecovered: false,
+  badges: [],
+  celebrateBadges: [],
 };
 
 /** The fields a new session inherits: a learner's history, not their current run. */
@@ -143,6 +155,8 @@ function career(state: GameState) {
     storageRecovered: state.storageRecovered,
     schemaVersion: state.schemaVersion,
     reverse: state.reverse,
+    badges: state.badges,
+    celebrateBadges: state.celebrateBadges,
   };
 }
 
@@ -463,6 +477,9 @@ const createGame = (
       // The direction is how this learner likes to practise, not something the
       // file carries, so an import leaves it alone.
       reverse: get().reverse,
+      // Badges belong to this device's server account, not to the imported
+      // file — an import must not erase what is already known to be earned.
+      badges: get().badges,
       profile,
       stats,
       // An imported library counts its intervals in the other device's
@@ -480,6 +497,20 @@ const createGame = (
 
   dismissRecovery: () => {
     set({ storageRecovered: false });
+  },
+
+  awardBadges: (ids) => {
+    const state = get();
+    const newIds = ids.filter((id) => !state.badges.includes(id));
+    if (newIds.length === 0) return;
+    set({
+      badges: [...state.badges, ...newIds],
+      celebrateBadges: [...state.celebrateBadges, ...newIds],
+    });
+  },
+
+  clearCelebration: () => {
+    set({ celebrateBadges: [] });
   },
 });
 
@@ -499,6 +530,7 @@ export const useGameStore = create<GameState & GameActions>()(
       profile: state.profile,
       bestStreakEver: state.bestStreakEver,
       totalScore: state.totalScore,
+      badges: state.badges,
       deckId: state.deckId,
       pool: state.pool,
       streak: state.streak,

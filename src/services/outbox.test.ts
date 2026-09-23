@@ -13,6 +13,7 @@ function payload(sessionId: string): SubmitSessionRequest {
     answers: [],
     claimedScore: 10,
     claimedBestStreak: 2,
+    distinctCorrect: 0,
   };
 }
 
@@ -24,10 +25,11 @@ const RESPONSE: SubmitSessionResponse = {
   bestStreak: 2,
   totalScore: 10,
   rank: null,
+  badges: [],
 };
 
-function ok(): ApiResult<SubmitSessionResponse> {
-  return { ok: true, data: RESPONSE };
+function ok(badges: SubmitSessionResponse['badges'] = []): ApiResult<SubmitSessionResponse> {
+  return { ok: true, data: { ...RESPONSE, badges } };
 }
 
 function fail(status: number | null, message = 'nope'): ApiResult<SubmitSessionResponse> {
@@ -164,5 +166,37 @@ describe('drain', () => {
 
     expect(seen).toEqual(['keep', 'drop-ok', 'drop-bad']);
     expect(size()).toBe(1);
+  });
+
+  it('calls onBadges when a send succeeds with newly-awarded badges', async () => {
+    enqueue(payload('a'), 0);
+    const send: Sender = () => Promise.resolve(ok(['first-session']));
+    const seen: string[][] = [];
+
+    await drain(send, 0, (ids) => {
+      seen.push(ids);
+    });
+
+    expect(seen).toEqual([['first-session']]);
+  });
+
+  it('does not call onBadges when a send succeeds with no badges', async () => {
+    enqueue(payload('a'), 0);
+    const send: Sender = () => Promise.resolve(ok([]));
+    let called = false;
+
+    await drain(send, 0, () => {
+      called = true;
+    });
+
+    expect(called).toBe(false);
+  });
+
+  it('works without an onBadges callback at all', async () => {
+    enqueue(payload('a'), 0);
+    const send: Sender = () => Promise.resolve(ok(['first-session']));
+
+    await expect(drain(send, 0)).resolves.toBeUndefined();
+    expect(size()).toBe(0);
   });
 });

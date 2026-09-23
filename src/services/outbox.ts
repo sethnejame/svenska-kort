@@ -12,6 +12,7 @@
  */
 import { z } from 'zod';
 import { submitSessionSchema, type SubmitSessionRequest, type SubmitSessionResponse } from '../../shared/api';
+import type { BadgeId } from '../../shared/badges';
 import { getItem, setItem } from '../store/storage';
 import type { ApiResult } from './apiClient';
 
@@ -86,8 +87,17 @@ export type Sender = (payload: SubmitSessionRequest) => Promise<ApiResult<Submit
  * returns 409, see `worker/src/session.ts`) drops the entry. A 4xx drops it
  * too: the payload is permanently malformed and retrying cannot fix it. A
  * network error or a 5xx keeps it and backs off.
+ *
+ * `onBadges`, when given, is called once per successful send whose response
+ * names newly-awarded badges. Optional so this file stays a pure queue —
+ * decoupled from `useGameStore` and independently testable — with the store
+ * wiring supplied by the caller that already sits at that layer.
  */
-export async function drain(send: Sender, now: number): Promise<void> {
+export async function drain(
+  send: Sender,
+  now: number,
+  onBadges?: (ids: BadgeId[]) => void,
+): Promise<void> {
   const entries = load();
   if (entries.length === 0) return;
 
@@ -99,7 +109,10 @@ export async function drain(send: Sender, now: number): Promise<void> {
     }
 
     const result = await send(entry.payload);
-    if (result.ok) continue;
+    if (result.ok) {
+      if (result.data.badges.length > 0) onBadges?.(result.data.badges);
+      continue;
+    }
     if (result.status !== null && result.status < 500) continue;
 
     const attempts = entry.attempts + 1;

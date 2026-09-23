@@ -47,7 +47,7 @@ const EXPECTED_INDEXES = [
  * are the columns with no `CREATE TABLE` of their own to vouch for them.
  */
 const EXPECTED_COLUMNS: Readonly<Record<string, readonly string[]>> = {
-  device: ['best_score'],
+  device: ['best_score', 'season_id_days', 'season_days'],
   score_histogram: ['built_at'],
 };
 

@@ -739,3 +739,44 @@ describe('useGameStore persistence', () => {
     warn.mockRestore();
   });
 });
+
+describe('useGameStore badges', () => {
+  beforeEach(() => {
+    useGameStore.setState({ ...INITIAL_GAME_STATE, rng: () => 0.5 });
+  });
+
+  it('records a newly confirmed badge and queues it for celebration', () => {
+    store().awardBadges(['first-session']);
+
+    expect(store().badges).toEqual(['first-session']);
+    expect(store().celebrateBadges).toEqual(['first-session']);
+  });
+
+  it('does not re-queue or duplicate a badge already known', () => {
+    store().awardBadges(['first-session']);
+    store().clearCelebration();
+
+    store().awardBadges(['first-session', 'streak-10']);
+
+    expect(store().badges).toEqual(['first-session', 'streak-10']);
+    // Only the genuinely new one is queued; the already-known one is not repeated.
+    expect(store().celebrateBadges).toEqual(['streak-10']);
+  });
+
+  it('is a no-op when every id passed in is already known', () => {
+    store().awardBadges(['first-session']);
+    store().clearCelebration();
+
+    store().awardBadges(['first-session']);
+
+    expect(store().celebrateBadges).toEqual([]);
+  });
+
+  it('clearCelebration empties the queue without touching the confirmed list', () => {
+    store().awardBadges(['first-session']);
+    store().clearCelebration();
+
+    expect(store().celebrateBadges).toEqual([]);
+    expect(store().badges).toEqual(['first-session']);
+  });
+});

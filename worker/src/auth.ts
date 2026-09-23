@@ -27,6 +27,9 @@ export interface Device {
   best_score: number;
   distinct_correct: number;
   decks_played: string;
+  /** Which season `season_days` belongs to; both added by 0004, for `week-warrior`. */
+  season_id_days: string;
+  season_days: string;
 }
 
 /** Thrown to be turned into a response by the caller; never carries the token. */
@@ -107,7 +110,7 @@ export async function requireDevice(
     .prepare(
       `SELECT id, display_name, avatar_seed, is_admin, is_banned, created_at,
               last_seen_at, total_score, best_streak, best_score,
-              distinct_correct, decks_played
+              distinct_correct, decks_played, season_id_days, season_days
          FROM device WHERE token_hash = ? LIMIT 1`,
     )
     .bind(tokenHash)
@@ -161,6 +164,8 @@ async function register(
     best_score: 0,
     distinct_correct: 0,
     decks_played: '[]',
+    season_id_days: '',
+    season_days: '[]',
   };
 
   // `ON CONFLICT DO NOTHING` plus `RETURNING` makes first sight safe to race.
@@ -172,8 +177,8 @@ async function register(
     .prepare(
       `INSERT INTO device (id, token_hash, display_name, avatar_seed, is_admin, is_banned,
                            created_at, last_seen_at, total_score, best_streak, best_score,
-                           distinct_correct, decks_played)
-       VALUES (?, ?, ?, ?, 0, 0, ?, ?, 0, 0, 0, 0, '[]')
+                           distinct_correct, decks_played, season_id_days, season_days)
+       VALUES (?, ?, ?, ?, 0, 0, ?, ?, 0, 0, 0, 0, '[]', '', '[]')
        ON CONFLICT(token_hash) DO NOTHING
        RETURNING id`,
     )
@@ -195,7 +200,7 @@ async function register(
     .prepare(
       `SELECT id, display_name, avatar_seed, is_admin, is_banned, created_at,
               last_seen_at, total_score, best_streak, best_score,
-              distinct_correct, decks_played
+              distinct_correct, decks_played, season_id_days, season_days
          FROM device WHERE token_hash = ? LIMIT 1`,
     )
     .bind(tokenHash)

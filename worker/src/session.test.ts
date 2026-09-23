@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { SubmitSessionRequest } from '../../shared/api';
+import { ALL_DECK_TOPIC_IDS } from '../../shared/badges';
 import { replaySession, unpackAnswers, type PackedAnswer } from '../../shared/scoring';
+import { seasonIdFor } from '../../shared/season';
 import { flagsFor, submitSession, type SessionFlag } from './session';
 import { requireDevice, type Device } from './auth';
 import { TestD1 } from '../test/d1';
@@ -47,9 +49,47 @@ function session(
     answers,
     claimedScore: replaySession(answers).score,
     claimedBestStreak: replaySession(answers).bestStreak,
+    distinctCorrect: 0,
     ...over,
   };
   return body;
+}
+
+/**
+ * No badge predicate crosses here: a wrong answer every fifth caps every run
+ * below every streak threshold and keeps `correct !== answered`, so a test
+ * built on this measures the credit-and-session write budget alone, not the
+ * badges' own (separately tested) inserts.
+ */
+function boringSession(
+  count: number,
+  elapsedMs: number,
+  over: Partial<SubmitSessionRequest> = {},
+): SubmitSessionRequest {
+  const answers = Array.from({ length: count }, (_, i) => ({
+    entryId: `entry-${i}`,
+    verdict: i % 5 === 4 ? ('wrong' as const) : ('correct' as const),
+    elapsedMs,
+    wasTyped: true,
+    acceptedOnRetry: false,
+  }));
+  const totals = replaySession(answers);
+  return {
+    sessionId: 'session-1',
+    deckId: 'nyheter',
+    startedAt: new Date(NOW - count * elapsedMs).toISOString(),
+    endedAt: new Date(NOW).toISOString(),
+    answers,
+    claimedScore: totals.score,
+    claimedBestStreak: totals.bestStreak,
+    distinctCorrect: 0,
+    ...over,
+  };
+}
+
+/** A device that has already played, so `first-session` never fires on it. */
+function notFirstSessionDevice(): Device {
+  return { ...device, decks_played: '["skola"]' };
 }
 
 function storedFlags(): SessionFlag[] | null {
@@ -177,6 +217,7 @@ describe('submitSession — the score is the server’s', () => {
     const flagged = await submitSession(session(30, 250), device, deps());
     expect(Object.keys(flagged).sort()).toEqual([
       'answered',
+      'badges',
       'bestStreak',
       'correct',
       'rank',
@@ -265,7 +306,10 @@ describe('submitSession — idempotency', () => {
     const first = await submitSession(body, device, deps());
     const second = await submitSession(body, device, deps());
 
-    expect(second).toEqual(first);
+    // Everything but `badges` is identical: a replay is "the same thing" for
+    // every number, but never newly-earned news (see "submitSession — badges").
+    expect(second).toEqual({ ...first, badges: [] });
+    expect(first.badges).not.toEqual([]);
     expect(db.read('SELECT id FROM session')).toHaveLength(1);
   });
 
@@ -318,21 +362,211 @@ describe('submitSession — idempotency', () => {
   });
 });
 
+describe('submitSession — badges', () => {
+  function badgeIds(): string[] {
+    return db
+      .read<{ badge_id: string }>('SELECT badge_id FROM badge_award WHERE device_id = ?', device.id)
+      .map((row) => row.badge_id);
+  }
+
+  it('awards first-session on a device’s first-ever credited session', async () => {
+    const response = await submitSession(boringSession(5, 5000), device, deps());
+    expect(response.badges).toContain('first-session');
+    expect(badgeIds()).toContain('first-session');
+  });
+
+  it('does not award first-session to a device that has already played', async () => {
+    const response = await submitSession(boringSession(5, 5000), notFirstSessionDevice(), deps());
+    expect(response.badges).not.toContain('first-session');
+  });
+
+  it('reports no badges at all on a replay of the same session id', async () => {
+    const first = await submitSession(session(5, 5000), device, deps());
+    expect(first.badges).toContain('first-session');
+
+    const second = await submitSession(session(5, 5000), device, deps());
+    expect(second.badges).toEqual([]);
+    // The first attempt's row is still the only one — the replay's own INSERT
+    // attempt is a harmless no-op against the composite primary key.
+    expect(badgeIds()).toEqual(['first-session']);
+  });
+
+  it('awards streak-10 at a session best streak of exactly 10, not 9', async () => {
+    const ten = await submitSession(
+      session(10, 5000, { sessionId: 'ten' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(ten.badges).toContain('streak-10');
+
+    const nine = await submitSession(
+      session(9, 5000, { sessionId: 'nine' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(nine.badges).not.toContain('streak-10');
+  });
+
+  it('awards streak-25 at a session best streak of exactly 25, not 24', async () => {
+    const twentyFive = await submitSession(
+      session(25, 5000, { sessionId: 'twenty-five' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(twentyFive.badges).toContain('streak-25');
+    expect(twentyFive.badges).toContain('streak-10');
+
+    const twentyFour = await submitSession(
+      session(24, 5000, { sessionId: 'twenty-four' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(twentyFour.badges).not.toContain('streak-25');
+  });
+
+  it('awards perfect-deck at 10 correct answers with zero wrong, not with one', async () => {
+    const perfect = await submitSession(
+      session(10, 5000, { sessionId: 'perfect' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(perfect.badges).toContain('perfect-deck');
+
+    const flawed = await submitSession(
+      boringSession(10, 5000, { sessionId: 'flawed' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(flawed.badges).not.toContain('perfect-deck');
+  });
+
+  it('does not award perfect-deck under 10 answers, however clean', async () => {
+    const short = await submitSession(
+      session(9, 5000, { sessionId: 'short-perfect' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(short.badges).not.toContain('perfect-deck');
+  });
+
+  it('awards speed-demon at 10 fast typed correct answers under 4s, not at exactly 4s', async () => {
+    const fast = await submitSession(
+      session(10, 1000, { sessionId: 'fast' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(fast.badges).toContain('speed-demon');
+
+    const exactlyFour = await submitSession(
+      session(10, 4000, { sessionId: 'exactly-four' }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(exactlyFour.badges).not.toContain('speed-demon');
+  });
+
+  it('awards week-warrior on the 5th distinct day in a season, not the 4th', async () => {
+    const season = seasonIdFor(NOW);
+    const priorDays = ['2026-09-14', '2026-09-15', '2026-09-16'];
+
+    // Three prior days plus today is four distinct days — one short.
+    const fourDays = {
+      ...notFirstSessionDevice(),
+      season_id_days: season,
+      season_days: JSON.stringify(priorDays),
+    };
+    const four = await submitSession(boringSession(5, 5000, { sessionId: 'four-days' }), fourDays, deps());
+    expect(four.badges).not.toContain('week-warrior');
+
+    // A fourth prior day plus today is five.
+    const fiveDays = {
+      ...notFirstSessionDevice(),
+      season_id_days: season,
+      season_days: JSON.stringify([...priorDays, '2026-09-17']),
+    };
+    const five = await submitSession(boringSession(5, 5000, { sessionId: 'five-days' }), fiveDays, deps());
+    expect(five.badges).toContain('week-warrior');
+  });
+
+  it('does not double-count today if the device already has a session today', async () => {
+    const season = seasonIdFor(NOW);
+    // Four distinct prior days, one of them already today's date — five stored
+    // days, but only four distinct ones once today is folded in, so this must
+    // not cross the week-warrior threshold.
+    const priorDays = ['2026-09-14', '2026-09-15', '2026-09-16', '2026-09-22'];
+    const device = {
+      ...notFirstSessionDevice(),
+      season_id_days: season,
+      season_days: JSON.stringify(priorDays),
+    };
+
+    const result = await submitSession(boringSession(5, 5000, { sessionId: 'already-today' }), device, deps());
+    expect(result.badges).not.toContain('week-warrior');
+  });
+
+  it('awards all-decks on the 18th distinct topic deck, not the 17th', async () => {
+    const [last, ...rest] = ALL_DECK_TOPIC_IDS;
+    if (last === undefined) throw new Error('ALL_DECK_TOPIC_IDS must not be empty');
+
+    const seventeen = {
+      ...notFirstSessionDevice(),
+      decks_played: JSON.stringify(rest),
+    };
+    const seventeenth = await submitSession(
+      boringSession(5, 5000, { sessionId: 'deck-17', deckId: rest[0] }),
+      seventeen,
+      deps(),
+    );
+    expect(seventeenth.badges).not.toContain('all-decks');
+
+    const eighteenth = await submitSession(
+      boringSession(5, 5000, { sessionId: 'deck-18', deckId: last }),
+      seventeen,
+      deps(),
+    );
+    expect(eighteenth.badges).toContain('all-decks');
+  });
+
+  it('awards hundred-words at a reported distinct count of 100, not 99', async () => {
+    const hundred = await submitSession(
+      boringSession(5, 5000, { sessionId: 'hundred', distinctCorrect: 100 }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(hundred.badges).toContain('hundred-words');
+
+    const ninetyNine = await submitSession(
+      boringSession(5, 5000, { sessionId: 'ninety-nine', distinctCorrect: 99 }),
+      notFirstSessionDevice(),
+      deps(),
+    );
+    expect(ninetyNine.badges).not.toContain('hundred-words');
+  });
+
+  it('earns several badges from a single first-ever, perfect, 10-streak session', async () => {
+    const response = await submitSession(session(10, 5000), device, deps());
+    expect(response.badges.sort()).toEqual(['first-session', 'perfect-deck', 'streak-10'].sort());
+  });
+});
+
 describe('submitSession — the write budget', () => {
   it('writes exactly two rows per session', async () => {
-    await submitSession(session(71, 5000), device, deps());
+    // `boringSession` and `notFirstSessionDevice` earn no badges, so this
+    // isolates the credit-and-session budget from the separate, bounded
+    // badge_award budget covered under "submitSession — badges" below.
+    await submitSession(boringSession(71, 5000), notFirstSessionDevice(), deps());
     // One session row, one device row. A per-answer table would have written 72
     // here and put the daily ceiling at 1,408 sessions instead of 50,000.
     expect(db.rowsWritten).toBe(2);
   });
 
   it('writes two rows for a 500-answer session too — the cost does not scale', async () => {
-    await submitSession(session(500, 5000), device, deps());
+    await submitSession(boringSession(500, 5000), notFirstSessionDevice(), deps());
     expect(db.rowsWritten).toBe(2);
   });
 
   it('costs one round trip, so the two writes are one transaction', async () => {
-    await submitSession(session(20, 5000), device, deps());
+    await submitSession(boringSession(20, 5000), notFirstSessionDevice(), deps());
     expect(db.queries).toHaveLength(2);
   });
 
@@ -381,6 +615,7 @@ describe('submitSession — agreement with the client', () => {
       // the same file. Any drift shows up as a `score-mismatch` flag.
       claimedScore: totals.score,
       claimedBestStreak: totals.bestStreak,
+      distinctCorrect: 0,
     };
   }
 

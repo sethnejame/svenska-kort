@@ -15,6 +15,7 @@ const remoteMocks = vi.hoisted(() => ({
   myRank: vi.fn(),
   profile: vi.fn(),
   setProfile: vi.fn(),
+  badges: vi.fn(),
 }));
 
 const deviceTokenMocks = vi.hoisted(() => ({
@@ -32,6 +33,7 @@ vi.mock('./RemoteScoreStore', () => ({
     myRank = remoteMocks.myRank;
     profile = remoteMocks.profile;
     setProfile = remoteMocks.setProfile;
+    badges = remoteMocks.badges;
   },
 }));
 
@@ -226,5 +228,33 @@ describe('CompositeScoreStore.setProfile', () => {
       scoreStore.setProfile({ displayName: 'Ada', avatarSeed: 'ada' }),
     ).resolves.toBeUndefined();
     expect(useGameStore.getState().profile?.displayName).toBe('Ada');
+  });
+});
+
+describe('CompositeScoreStore.badges', () => {
+  it('reads local (the persisted fallback) when there is no device token', async () => {
+    const { scoreStore, useGameStore } = await load(true);
+    deviceTokenMocks.getToken.mockReturnValue(null);
+    useGameStore.setState({ badges: ['first-session'] });
+
+    await expect(scoreStore.badges()).resolves.toEqual([]);
+    expect(remoteMocks.badges).not.toHaveBeenCalled();
+  });
+
+  it('reads remote when a device token exists', async () => {
+    const { scoreStore } = await load(true);
+    deviceTokenMocks.getToken.mockReturnValue('a-token');
+    remoteMocks.badges.mockResolvedValue(['first-session', 'streak-10']);
+
+    await expect(scoreStore.badges()).resolves.toEqual(['first-session', 'streak-10']);
+  });
+
+  it('falls back to the store’s persisted fallback when the remote read fails', async () => {
+    const { scoreStore, useGameStore } = await load(true);
+    deviceTokenMocks.getToken.mockReturnValue('a-token');
+    remoteMocks.badges.mockRejectedValue(new Error('network down'));
+    useGameStore.setState({ badges: ['first-session'] });
+
+    await expect(scoreStore.badges()).resolves.toEqual(['first-session']);
   });
 });

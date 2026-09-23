@@ -16,6 +16,7 @@ import {
 } from '../../shared/api';
 import { SESSION_BYTES_MAX } from '../../shared/constants';
 import { AuthError, requireDevice, sha256Hex, type Device } from './auth';
+import { awardTopTen, badgesFor } from './badges';
 import { cachedResponse, cacheResponse, LEADERBOARD_MAX_AGE_SECONDS, leaderboardCacheKey } from './cache';
 import { corsHeaders, preflight } from './cors';
 import {
@@ -62,7 +63,7 @@ function fail(request: Request, status: number, error: string): Response {
   return json(request, { error }, status);
 }
 
-function meBody(device: Device, rank: number | null): MeResponse {
+async function meBody(device: Device, rank: number | null, env: Env): Promise<MeResponse> {
   return {
     deviceId: device.id,
     displayName: device.display_name,
@@ -72,6 +73,7 @@ function meBody(device: Device, rank: number | null): MeResponse {
     totalScore: device.total_score,
     bestStreak: device.best_streak,
     rank,
+    badges: await badgesFor(device.id, env.DB),
   };
 }
 
@@ -139,7 +141,7 @@ const routes: readonly Route<Env>[] = [
     path: '/api/me',
     handler: async (request, env) => {
       const device = await requireDevice(request, deps(env));
-      return json(request, meBody(device, await myRank(device, env)));
+      return json(request, await meBody(device, await myRank(device, env), env));
     },
   },
   {
@@ -150,7 +152,7 @@ const routes: readonly Route<Env>[] = [
       // client that sends nothing still gets an account.
       const hint = await registrationHint(request);
       const device = await requireDevice(request, deps(env), hint);
-      return json(request, meBody(device, await myRank(device, env)));
+      return json(request, await meBody(device, await myRank(device, env), env));
     },
   },
   {
@@ -166,7 +168,7 @@ const routes: readonly Route<Env>[] = [
         .run();
 
       return json(request, {
-        ...meBody(device, await myRank(device, env)),
+        ...(await meBody(device, await myRank(device, env), env)),
         displayName: parsed.data.displayName,
         avatarSeed: parsed.data.avatarSeed,
       });
@@ -334,6 +336,10 @@ export default {
    * either way.
    */
   async scheduled(_event: unknown, env: Env): Promise<void> {
-    await rebuildAll({ db: env.DB, now: Date.now() });
+    const now = Date.now();
+    await rebuildAll({ db: env.DB, now });
+    // Reads the snapshot `rebuildAll` just wrote, so the previous week's
+    // standings it checks are always current as of this tick.
+    await awardTopTen({ db: env.DB, now });
   },
 };

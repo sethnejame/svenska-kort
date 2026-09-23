@@ -24,6 +24,18 @@
  * they just spent ten minutes on.
  */
 import type { SubmitSessionRequest, SubmitSessionResponse } from '../../shared/api';
+import {
+  ALL_DECK_TOPIC_IDS,
+  hasAllDecks,
+  hasHundredWords,
+  hasWeekWarrior,
+  isFirstSession,
+  isPerfectDeck,
+  isSpeedDemon,
+  isStreak10,
+  isStreak25,
+  type BadgeId,
+} from '../../shared/badges';
 import { packAnswers, replaySession } from '../../shared/scoring';
 import { seasonIdFor } from '../../shared/season';
 import type { Device } from './auth';
@@ -143,16 +155,58 @@ export async function submitSession(
   // stats and a flag only holds a session off the leaderboard.
   const leaderboardScore = flags.length > 0 ? 0 : totals.score;
 
+  // Badge state, derived from the device row fetched before this request's own
+  // update and from this session's own numbers — never a query, so this adds
+  // nothing to the round trip. `week-warrior` and `all-decks` are ratchets on
+  // `device` (see 0001/0004); the rest are pure functions of `totals`/`body`.
+  const hadNoPriorSessions = device.decks_played === '[]';
+  const decksPlayed: string[] = JSON.parse(device.decks_played) as string[];
+  const isTopicDeck = (ALL_DECK_TOPIC_IDS as readonly string[]).includes(body.deckId);
+  const newDecksPlayed =
+    isTopicDeck && !decksPlayed.includes(body.deckId) ? [...decksPlayed, body.deckId] : decksPlayed;
+
+  const season = seasonIdFor(deps.now);
+  const seasonDays: string[] =
+    device.season_id_days === season ? (JSON.parse(device.season_days) as string[]) : [];
+  const today = createdAt.slice(0, 10);
+  const newSeasonDays = seasonDays.includes(today) ? seasonDays : [...seasonDays, today];
+
+  const badgeChecks: ReadonlyArray<[BadgeId, boolean]> = [
+    ['first-session', isFirstSession(hadNoPriorSessions)],
+    ['streak-10', isStreak10(totals.bestStreak)],
+    ['streak-25', isStreak25(totals.bestStreak)],
+    ['perfect-deck', isPerfectDeck(totals.answered, totals.correct)],
+    ['speed-demon', isSpeedDemon(body.answers)],
+    ['week-warrior', hasWeekWarrior(newSeasonDays.length)],
+    ['all-decks', hasAllDecks(newDecksPlayed)],
+    ['hundred-words', hasHundredWords(body.distinctCorrect)],
+  ];
+  const earnedBadgeIds = badgeChecks.filter(([, earned]) => earned).map(([id]) => id);
+
   const credit = deps.db
     .prepare(
       `UPDATE device
           SET total_score = total_score + ?,
               best_streak = MAX(best_streak, ?),
-              best_score  = MAX(best_score, ?)
+              best_score  = MAX(best_score, ?),
+              distinct_correct = MAX(distinct_correct, ?),
+              decks_played = ?,
+              season_id_days = ?,
+              season_days = ?
         WHERE id = ?
           AND NOT EXISTS (SELECT 1 FROM session WHERE id = ?)`,
     )
-    .bind(totals.score, totals.bestStreak, leaderboardScore, device.id, body.sessionId);
+    .bind(
+      totals.score,
+      totals.bestStreak,
+      leaderboardScore,
+      body.distinctCorrect,
+      JSON.stringify(newDecksPlayed),
+      season,
+      JSON.stringify(newSeasonDays),
+      device.id,
+      body.sessionId,
+    );
 
   const insert = deps.db
     .prepare(
@@ -167,7 +221,7 @@ export async function submitSession(
       body.sessionId,
       device.id,
       body.deckId,
-      seasonIdFor(deps.now),
+      season,
       body.startedAt,
       body.endedAt,
       totals.answered,
@@ -180,22 +234,48 @@ export async function submitSession(
       createdAt,
     );
 
-  // One batch is one D1 transaction and one round trip, so either both rows are
-  // written or neither is. A session stored without its credit would be a score
-  // the learner earned and never received, and no later request would fix it.
-  const results = await deps.db.batch<{ id: string }>([credit, insert]);
-  // The UPDATE carries no RETURNING and so contributes nothing here. Anything in
-  // this list came from the INSERT, which means the session was stored now
-  // rather than by an earlier attempt.
-  const storedNow = results.flatMap((result) => result.results);
+  // A badge_award insert per predicate that came out true, appended to the same
+  // batch as the credit and the session row — still one transaction, one round
+  // trip. The composite PK's `ON CONFLICT DO NOTHING` makes each one safe to
+  // attempt even on a retry that re-evaluates the same predicate true; only a
+  // genuinely new row comes back from `RETURNING`.
+  const badgeInserts = earnedBadgeIds.map((badgeId) =>
+    deps.db
+      .prepare(
+        `INSERT INTO badge_award (device_id, badge_id, season_id, awarded_at)
+         VALUES (?, ?, '', ?)
+         ON CONFLICT DO NOTHING
+         RETURNING badge_id`,
+      )
+      .bind(device.id, badgeId, createdAt),
+  );
 
-  if (storedNow.length > 0) {
+  // One batch is one D1 transaction and one round trip, so either every row is
+  // written or none is. A session stored without its credit would be a score
+  // the learner earned and never received, and no later request would fix it.
+  const results = await deps.db.batch<{ id: string } | { badge_id: BadgeId }>([
+    credit,
+    insert,
+    ...badgeInserts,
+  ]);
+  // The array's shape is fixed by the call above: index 0 is always the
+  // credit UPDATE (no RETURNING), index 1 is always the session INSERT, and
+  // everything after is one row per badge insert, in order. `noUncheckedIndexedAccess`
+  // cannot see that invariant, so it is asserted once here rather than
+  // threaded through as `| undefined` on every access below.
+  const [insertResult] = results.slice(1, 2) as [D1Result<{ id: string }>];
+  const badgeResults = results.slice(2) as D1Result<{ badge_id: BadgeId }>[];
+
+  if (insertResult.results.length > 0) {
+    const awardedIds = new Set(badgeResults.flatMap((r) => r.results.map((row) => row.badge_id)));
+    const badges = earnedBadgeIds.filter((id) => awardedIds.has(id));
     return {
       sessionId: body.sessionId,
       ...totals,
       totalScore: device.total_score + totals.score,
       // P05 fills this from the histogram.
       rank: null,
+      badges,
     };
   }
 
@@ -245,6 +325,7 @@ async function replayOf(
       bestStreak: 0,
       totalScore: device.total_score,
       rank: null,
+      badges: [],
     };
   }
 
@@ -256,5 +337,8 @@ async function replayOf(
     bestStreak: row.best_streak,
     totalScore: row.total_score,
     rank: null,
+    // A replay is never "new news" — the badges, if any, were already reported
+    // on the attempt that first stored this session.
+    badges: [],
   };
 }

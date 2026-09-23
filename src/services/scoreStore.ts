@@ -19,6 +19,8 @@ export interface ScoreStore {
   myRank(): Promise<number | null>;
   profile(): Promise<Profile>;
   setProfile(p: Partial<Profile>): Promise<void>;
+  /** Every badge id this device has ever earned, for the badge shelf. */
+  badges(): Promise<string[]>;
 }
 
 const GHOSTS: Ghost[] = ghostData;
@@ -84,6 +86,11 @@ class LocalScoreStore implements ScoreStore {
     );
     return Promise.resolve();
   }
+
+  badges(): Promise<string[]> {
+    // Phase 2 has no server-confirmed badges to show.
+    return Promise.resolve([]);
+  }
 }
 
 /**
@@ -147,6 +154,18 @@ class CompositeScoreStore implements ScoreStore {
     } catch {
       // The outbox has no place for a profile edit; the next successful read
       // or edit reconciles it. Local already has the learner's intent.
+    }
+  }
+
+  async badges(): Promise<string[]> {
+    if (getToken() === null) return this.local.badges();
+    try {
+      // A successful call already syncs `useGameStore`'s persisted fallback
+      // as a side effect (see `RemoteScoreStore.badges()`); this is simply
+      // the freshest answer on top of that.
+      return await this.remote.badges();
+    } catch {
+      return useGameStore.getState().badges;
     }
   }
 }

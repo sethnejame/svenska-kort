@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BADGE_IDS, type BadgeId } from './badges';
 import {
   DAY_MS,
   DISPLAY_NAME_MAX,
@@ -6,6 +7,8 @@ import {
   FORBIDDEN_TEXT,
   SESSION_ANSWERS_MAX,
 } from './constants';
+
+const badgeIdSchema = z.enum(BADGE_IDS);
 
 /**
  * The wire contract. The app and the Worker both import this file and neither
@@ -124,6 +127,8 @@ export interface MeResponse {
   totalScore: number;
   bestStreak: number;
   rank: number | null;
+  /** Every badge id ever awarded to this device — the badge shelf's source of truth. */
+  badges: BadgeId[];
 }
 
 export const meResponseSchema = z.object({
@@ -135,6 +140,7 @@ export const meResponseSchema = z.object({
   totalScore: z.number(),
   bestStreak: z.number(),
   rank: z.number().nullable(),
+  badges: z.array(badgeIdSchema),
 });
 
 /** Sent with the first call so a new device can name itself as it registers. */
@@ -191,6 +197,14 @@ export const submitSessionSchema = z.object({
   /** Recorded for audit and compared against the recomputed score. Never stored as the score. */
   claimedScore: z.number().int().gte(0).lte(10_000_000),
   claimedBestStreak: z.number().int().gte(0).lte(SESSION_ANSWERS_MAX),
+  /**
+   * The client's own count of distinct entries ever answered correctly, read from its local
+   * `stats`. The Worker has no per-entry history to derive this from (that would cost a row per
+   * answer, exactly what this schema avoids), so `hundred-words` trusts this the same way the
+   * rest of the app trusts *what happened* and never *what it's worth* — see `worker/src/
+   * session.ts`. Stored as a `MAX()` ratchet, so a stale or replayed value can never lower it.
+   */
+  distinctCorrect: z.number().int().gte(0).lte(100_000),
 });
 
 export type SubmitSessionRequest = z.infer<typeof submitSessionSchema>;
@@ -212,6 +226,8 @@ export interface SubmitSessionResponse {
   /** The device's running total after this session. */
   totalScore: number;
   rank: number | null;
+  /** Newly earned this submission, `[]` on a replay or when nothing new was earned. */
+  badges: BadgeId[];
 }
 
 export const submitSessionResponseSchema = z.object({
@@ -222,6 +238,7 @@ export const submitSessionResponseSchema = z.object({
   bestStreak: z.number(),
   totalScore: z.number(),
   rank: z.number().nullable(),
+  badges: z.array(badgeIdSchema),
 });
 
 // --- GET /api/leaderboard ---------------------------------------------------

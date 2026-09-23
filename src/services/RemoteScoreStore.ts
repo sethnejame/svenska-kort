@@ -18,6 +18,7 @@ import {
   type SubmitSessionRequest,
   type SubmitSessionResponse,
 } from '../../shared/api';
+import { useGameStore } from '../store/useGameStore';
 import { apiRequest, type ApiResult } from './apiClient';
 import { drain, enqueue, nextDrainAt } from './outbox';
 
@@ -32,7 +33,12 @@ function send(payload: SubmitSessionRequest): Promise<ApiResult<SubmitSessionRes
 let timer: ReturnType<typeof setTimeout> | undefined;
 
 async function drainNow(): Promise<void> {
-  await drain(send, Date.now());
+  // Newly-awarded badges are recorded as a side effect of a successful send,
+  // so a badge earned by an outbox retry (not just a fresh submit) still
+  // reaches the shelf and, if the done screen is still mounted, its burst.
+  await drain(send, Date.now(), (ids) => {
+    useGameStore.getState().awardBadges(ids);
+  });
   scheduleNext();
 }
 
@@ -86,6 +92,13 @@ export class RemoteScoreStore implements ScoreStore {
     // pulled in from an imported backup. Neither is ever resubmitted.
     if (answers === undefined) return Promise.resolve();
 
+    // The ratchet `hundred-words` ticks on: only the client holds a per-entry
+    // history, so it reports its current distinct-correct total on every
+    // submission and the Worker takes the max, never a per-answer delta.
+    const distinctCorrect = Object.values(useGameStore.getState().stats).filter(
+      (stat) => stat.correct > 0,
+    ).length;
+
     enqueue(
       {
         sessionId: result.id,
@@ -95,6 +108,7 @@ export class RemoteScoreStore implements ScoreStore {
         answers,
         claimedScore: result.score,
         claimedBestStreak: result.bestStreak,
+        distinctCorrect,
       },
       Date.now(),
     );
@@ -136,6 +150,9 @@ export class RemoteScoreStore implements ScoreStore {
     const result = await apiRequest(meResponseSchema, { method: 'GET', path: '/api/me' });
     if (!result.ok) throw new Error(result.message);
     cachedDeviceId = result.data.deviceId;
+    // A sync side effect, not this call's own purpose: keeps the badge
+    // shelf's persisted, offline fallback current on every `/api/me` read.
+    useGameStore.getState().awardBadges(result.data.badges);
     return {
       displayName: result.data.displayName,
       avatarSeed: result.data.avatarSeed,
@@ -143,6 +160,14 @@ export class RemoteScoreStore implements ScoreStore {
       totalScore: result.data.totalScore,
       bestStreakEver: result.data.bestStreak,
     };
+  }
+
+  async badges(): Promise<string[]> {
+    const result = await apiRequest(meResponseSchema, { method: 'GET', path: '/api/me' });
+    if (!result.ok) throw new Error(result.message);
+    cachedDeviceId = result.data.deviceId;
+    useGameStore.getState().awardBadges(result.data.badges);
+    return result.data.badges;
   }
 
   async setProfile(p: Partial<Profile>): Promise<void> {

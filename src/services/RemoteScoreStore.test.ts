@@ -21,6 +21,7 @@ const ME_RESPONSE = {
   totalScore: 120,
   bestStreak: 9,
   rank: 3,
+  badges: [],
 };
 
 const LEADERBOARD_RESPONSE = {
@@ -144,6 +145,7 @@ describe('RemoteScoreStore.submitSession', () => {
         answers: SESSION_WITH_ANSWERS.answers,
         claimedScore: 10,
         claimedBestStreak: 1,
+        distinctCorrect: 0,
       },
       expect.any(Number),
     );
@@ -251,6 +253,39 @@ describe('RemoteScoreStore.profile', () => {
     const store = new RemoteScoreStore();
 
     await expect(store.profile()).rejects.toThrow('server error');
+  });
+
+  it('syncs badges into useGameStore as a side effect, even though Profile has no badges field', async () => {
+    const { RemoteScoreStore, apiRequest } = await load();
+    apiRequest.mockResolvedValue(ok({ ...ME_RESPONSE, badges: ['first-session'] }));
+    const store = new RemoteScoreStore();
+    const { useGameStore } = await import('../store/useGameStore');
+    useGameStore.setState({ badges: [], celebrateBadges: [] });
+
+    await store.profile();
+
+    expect(useGameStore.getState().badges).toEqual(['first-session']);
+  });
+});
+
+describe('RemoteScoreStore.badges', () => {
+  it('returns the badges from /api/me and syncs them into useGameStore', async () => {
+    const { RemoteScoreStore, apiRequest } = await load();
+    apiRequest.mockResolvedValue(ok({ ...ME_RESPONSE, badges: ['first-session', 'streak-10'] }));
+    const store = new RemoteScoreStore();
+    const { useGameStore } = await import('../store/useGameStore');
+    useGameStore.setState({ badges: [], celebrateBadges: [] });
+
+    await expect(store.badges()).resolves.toEqual(['first-session', 'streak-10']);
+    expect(useGameStore.getState().badges).toEqual(['first-session', 'streak-10']);
+  });
+
+  it('throws when /api/me fails', async () => {
+    const { RemoteScoreStore, apiRequest } = await load();
+    apiRequest.mockResolvedValue(fail(500, 'server error'));
+    const store = new RemoteScoreStore();
+
+    await expect(store.badges()).rejects.toThrow('server error');
   });
 });
 

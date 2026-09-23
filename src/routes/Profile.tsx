@@ -23,6 +23,12 @@ const TransferPanel = lazy(async () => {
   return { default: module.TransferPanel };
 });
 
+/** Same below-the-fold reasoning: most learners glance at this once, not every visit. */
+const BadgeShelf = lazy(async () => {
+  const module = await import('../components/BadgeShelf/BadgeShelf');
+  return { default: module.BadgeShelf };
+});
+
 const SEED_CHOICES = 6;
 const NAME_MIN = 2;
 const NAME_MAX = 20;
@@ -139,6 +145,10 @@ export function Profile() {
 
       <Suspense fallback={null}>
         <TransferPanel />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <BadgeShelf />
       </Suspense>
     </main>
   );
