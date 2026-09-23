@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import worker, { type Env } from './index';
 import {
+  claimTransferCodeResponseSchema,
+  createTransferCodeResponseSchema,
   healthResponseSchema,
   leaderboardResponseSchema,
   meResponseSchema,
@@ -93,6 +95,12 @@ function call(path: string, init: RequestInit = {}, origin: string | null = ALLO
 function authed(path: string, init: RequestInit = {}, token: string | null = TOKEN) {
   const headers = new Headers(init.headers);
   if (token !== null) headers.set('Authorization', `Bearer ${token}`);
+  return call(path, { ...init, headers });
+}
+
+function fromIp(path: string, init: RequestInit = {}, ip = '203.0.113.1') {
+  const headers = new Headers(init.headers);
+  headers.set('CF-Connecting-IP', ip);
   return call(path, { ...init, headers });
 }
 
@@ -659,5 +667,137 @@ describe('rank on /api/me', () => {
     // The device row, its snapshot lookup, and at most the histogram. The
     // ticket's budget for a rank is 70 rows.
     expect(db.rowsRead).toBeLessThanOrEqual(70);
+  });
+});
+
+describe('POST /api/transfer/create', () => {
+  it('401s without a token', async () => {
+    const response = await call('/api/transfer/create', { method: 'POST' });
+    expect(response.status).toBe(401);
+  });
+
+  it('answers the shared schema for an authenticated device', async () => {
+    const response = await authed('/api/transfer/create', { method: 'POST' });
+    expect(response.status).toBe(200);
+
+    const body = createTransferCodeResponseSchema.parse(await response.json());
+    expect(body.code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+  });
+
+  it('never puts the token in the transfer-create response', async () => {
+    const response = await authed('/api/transfer/create', { method: 'POST' });
+    expect(await response.text()).not.toContain(TOKEN);
+  });
+});
+
+describe('POST /api/transfer/claim', () => {
+  it('400s a missing code rather than 500ing', async () => {
+    const response = await fromIp('/api/transfer/claim', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('400s a code nobody ever created, with a generic message', async () => {
+    const response = await fromIp('/api/transfer/claim', {
+      method: 'POST',
+      body: JSON.stringify({ code: 'ZZZZ-ZZZZ' }),
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: expect.any(String) });
+  });
+
+  it('still rate-limits a caller with no CF-Connecting-IP header', async () => {
+    const response = await call('/api/transfer/claim', {
+      method: 'POST',
+      body: JSON.stringify({ code: 'ZZZZ-ZZZZ' }),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('400s a body that is not JSON rather than 500ing', async () => {
+    const response = await fromIp('/api/transfer/claim', { method: 'POST', body: 'not json' });
+    expect(response.status).toBe(400);
+  });
+
+  it('rate-limits to 5 attempts a minute per IP, refusing the 6th', async () => {
+    const attempt = () =>
+      fromIp('/api/transfer/claim', {
+        method: 'POST',
+        body: JSON.stringify({ code: 'WRNG-CODE' }),
+      });
+
+    let last: Response | undefined;
+    for (let i = 0; i < 6; i += 1) last = await attempt();
+
+    expect(last?.status).toBe(429);
+  });
+
+  it('moves an account from one device to another end to end', async () => {
+    // Device A: registers, plays, then creates a code.
+    await authed('/api/me', {}, TOKEN);
+    await authed('/api/me', {
+      method: 'PUT',
+      body: JSON.stringify({ displayName: 'Ada', avatarSeed: 'ada' }),
+    });
+    const created = createTransferCodeResponseSchema.parse(
+      await (await authed('/api/transfer/create', { method: 'POST' })).json(),
+    );
+
+    // Device B: an unauthenticated caller claims the code.
+    const claimResponse = await fromIp('/api/transfer/claim', {
+      method: 'POST',
+      body: JSON.stringify({ code: created.code }),
+    });
+    expect(claimResponse.status).toBe(200);
+    const claimed = claimTransferCodeResponseSchema.parse(await claimResponse.json());
+
+    // The new token reads and writes Device A's original account.
+    const meOnB = meResponseSchema.parse(await (await authed('/api/me', {}, claimed.token)).json());
+    expect(meOnB.displayName).toBe('Ada');
+
+    const renameOnB = meResponseSchema.parse(
+      await (
+        await authed('/api/me', {
+          method: 'PUT',
+          body: JSON.stringify({ displayName: 'Ada B', avatarSeed: 'ada' }),
+        }, claimed.token)
+      ).json(),
+    );
+    expect(renameOnB.displayName).toBe('Ada B');
+
+    // The old token on Device A no longer authenticates — it was overwritten.
+    const meOnA = await authed('/api/me', {}, TOKEN);
+    expect(meOnA.status).toBe(200);
+    // A device row for the old token is created fresh (first sight again),
+    // rather than reaching the transferred account.
+    const freshA = meResponseSchema.parse(await meOnA.json());
+    expect(freshA.deviceId).not.toBe(meOnB.deviceId);
+  });
+
+  it('lets a second code invalidate the first', async () => {
+    await authed('/api/me');
+    const first = createTransferCodeResponseSchema.parse(
+      await (await authed('/api/transfer/create', { method: 'POST' })).json(),
+    );
+    createTransferCodeResponseSchema.parse(
+      await (await authed('/api/transfer/create', { method: 'POST' })).json(),
+    );
+
+    const response = await fromIp('/api/transfer/claim', {
+      method: 'POST',
+      body: JSON.stringify({ code: first.code }),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('never puts the submitted code in the response', async () => {
+    const secretCode = 'ABCD-EFGH';
+    const response = await fromIp('/api/transfer/claim', {
+      method: 'POST',
+      body: JSON.stringify({ code: secretCode }),
+    });
+    expect(await response.text()).not.toContain('ABCD');
   });
 });

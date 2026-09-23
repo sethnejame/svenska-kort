@@ -1,10 +1,13 @@
 import type {
+  ClaimTransferCodeResponse,
+  CreateTransferCodeResponse,
   HealthResponse,
   LeaderboardResponse,
   MeResponse,
   Registration,
 } from '../../shared/api';
 import {
+  claimTransferCodeSchema,
   firstIssue,
   leaderboardQuerySchema,
   registrationSchema,
@@ -12,7 +15,7 @@ import {
   updateProfileSchema,
 } from '../../shared/api';
 import { SESSION_BYTES_MAX } from '../../shared/constants';
-import { AuthError, requireDevice, type Device } from './auth';
+import { AuthError, requireDevice, sha256Hex, type Device } from './auth';
 import { cachedResponse, cacheResponse, LEADERBOARD_MAX_AGE_SECONDS, leaderboardCacheKey } from './cache';
 import { corsHeaders, preflight } from './cors';
 import {
@@ -26,6 +29,7 @@ import {
 } from './leaderboard';
 import { lookup, type Ctx, type Route } from './router';
 import { FUTURE_TOLERANCE_MS, submitSession } from './session';
+import { claimCode, createCode } from './transfer';
 
 export interface Env {
   /** Set by wrangler from the deployed commit; `dev` when running locally. */
@@ -199,6 +203,36 @@ const routes: readonly Route<Env>[] = [
       }
 
       return json(request, await submitSession(parsed.data, device, { db: env.DB, now }));
+    },
+  },
+  {
+    method: 'POST',
+    path: '/api/transfer/create',
+    handler: async (request, env) => {
+      const device = await requireDevice(request, deps(env));
+      const created = await createCode(device, deps(env));
+      const body: CreateTransferCodeResponse = created;
+      return json(request, body);
+    },
+  },
+  {
+    method: 'POST',
+    path: '/api/transfer/claim',
+    handler: async (request, env) => {
+      const parsed = claimTransferCodeSchema.safeParse(await request.json().catch(() => null));
+      if (!parsed.success) return fail(request, 400, firstIssue(parsed.error));
+
+      // Hashed before it ever reaches a query or a log line, same as the
+      // device token: the limiter needs to recognize a caller again, not
+      // retain an address that identifies them.
+      const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      const ipHash = await sha256Hex(ip);
+
+      const outcome = await claimCode(parsed.data.code, ipHash, deps(env));
+      if (!outcome.ok) return fail(request, outcome.status, outcome.error);
+
+      const body: ClaimTransferCodeResponse = { token: outcome.token };
+      return json(request, body);
     },
   },
 ];

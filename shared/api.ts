@@ -279,3 +279,42 @@ export const leaderboardResponseSchema = z.object({
   rows: z.array(leaderboardRowSchema),
   ageSeconds: z.number().nullable(),
 });
+
+// --- POST /api/transfer/create -----------------------------------------------
+
+/**
+ * The plaintext code, shown exactly once. The server stores only its hash, so
+ * this response is the only place it ever exists outside the learner's head.
+ */
+export interface CreateTransferCodeResponse {
+  /** Formatted `ABCD-EFGH`, for reading aloud. */
+  code: string;
+  expiresAt: string;
+}
+
+export const createTransferCodeResponseSchema = z.object({
+  code: z.string(),
+  expiresAt: z.string(),
+});
+
+// --- POST /api/transfer/claim ------------------------------------------------
+
+/**
+ * Bounded well above a real code (`ABCD-EFGH` is 9 characters) so an
+ * oversized value is rejected before it is normalized and hashed, rather than
+ * spending CPU on a string that could not possibly match.
+ */
+export const claimTransferCodeSchema = z.object({
+  code: z.string().min(1).max(20),
+});
+
+export type ClaimTransferCodeRequest = z.infer<typeof claimTransferCodeSchema>;
+
+/** The new device token, bound to the same account as the code's creator. */
+export interface ClaimTransferCodeResponse {
+  token: string;
+}
+
+export const claimTransferCodeResponseSchema = z.object({
+  token: z.string(),
+});

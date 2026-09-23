@@ -20,6 +20,7 @@ const EXPECTED_TABLES = [
   'session',
   'shared_deck',
   'suggestion',
+  'transfer_claim_attempt',
   'transfer_code',
   'usage',
 ] as const;

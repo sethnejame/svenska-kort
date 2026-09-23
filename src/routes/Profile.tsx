@@ -17,6 +17,12 @@ const BackupPanel = lazy(async () => {
   return { default: module.BackupPanel };
 });
 
+/** Pulls in the transfer service too, same below-the-fold reasoning as `BackupPanel`. */
+const TransferPanel = lazy(async () => {
+  const module = await import('../components/TransferPanel/TransferPanel');
+  return { default: module.TransferPanel };
+});
+
 const SEED_CHOICES = 6;
 const NAME_MIN = 2;
 const NAME_MAX = 20;
@@ -129,6 +135,10 @@ export function Profile() {
 
       <Suspense fallback={null}>
         <BackupPanel />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <TransferPanel />
       </Suspense>
     </main>
   );
