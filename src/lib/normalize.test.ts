@@ -44,6 +44,11 @@ describe('normalize', () => {
   it('keeps a bare article as a word rather than emptying it', () => {
     expect(normalize('the ')).toBe('the');
   });
+
+  it('treats curly and straight apostrophes in a contraction as the same answer', () => {
+    expect(normalize("don\u2019t")).toBe(normalize("don't"));
+    expect(normalize('don\u2019t')).toBe("don't");
+  });
 });
 
 describe('normalizeSwedish', () => {

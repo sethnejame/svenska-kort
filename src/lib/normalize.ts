@@ -1,10 +1,14 @@
 const LEADING_ARTICLES = ['to ', 'the ', 'a ', 'an '];
 
+/** Every character a learner might type or paste for a straight apostrophe. */
+const APOSTROPHES = /[\u2018\u2019\u02bc\u00b4\u0060]/g;
+
 /** Case, spacing, quotes and parentheticals: what both languages agree on. */
 function tidy(s: string): string {
   let out = s.replace(/\([^)]*\)/g, ' ');
   out = out.trim().replace(/\s+/g, ' ').toLowerCase();
-  out = out.replace(/^["'\u201c\u201d\u2018\u2019]+/, '').replace(/["'\u201c\u201d\u2018\u2019]+$/, '');
+  out = out.replace(APOSTROPHES, "'");
+  out = out.replace(/^["'\u201c\u201d]+/, '').replace(/["'\u201c\u201d]+$/, '');
   out = out.replace(/[.!?]+$/, '');
   return out.trim().replace(/\s+/g, ' ');
 }
