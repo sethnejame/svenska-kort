@@ -14,6 +14,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { WordEntry } from '../types/word';
 import { getEntry } from '../data/decks';
+import { MIN_FUZZY_LENGTH } from '../lib/checkAnswer';
+import { normalize } from '../lib/normalize';
 import { replaySession, type SessionAnswer } from '../../shared/scoring';
 import { INITIAL_GAME_STATE, useGameStore } from './useGameStore';
 
@@ -52,12 +54,22 @@ const NONSENSE = 'qqqqqqqqq';
  * what makes the comparison meaningful rather than circular.
  */
 function play(
-  kind: 'correct' | 'peeked' | 'retry' | 'wrong' | 'close',
+  requestedKind: 'correct' | 'peeked' | 'retry' | 'wrong' | 'close',
   elapsedMs: number,
 ): SessionAnswer {
   const shownAt = store().promptShownAt;
   const now = shownAt + elapsedMs;
   const answer = firstAnswer(current());
+
+  // Fuzzy matching is off below `MIN_FUZZY_LENGTH`, so a typo on a short answer
+  // (e.g. "no") can never grade 'close' - it resolves as an outright wrong on
+  // the first submit. Play these as a plain correct instead, or `kind` would
+  // claim a near-miss that the store never actually saw.
+  const kind =
+    (requestedKind === 'retry' || requestedKind === 'close') &&
+    normalize(answer).length < MIN_FUZZY_LENGTH
+      ? 'correct'
+      : requestedKind;
 
   if (kind === 'peeked') store().flip();
   if (kind === 'retry' || kind === 'close') {

@@ -11986,7 +11986,9 @@
       "kind": "adjective",
       "base": "vanlig",
       "neuter": "vanligt",
-      "plural": "vanliga"
+      "plural": "vanliga",
+      "comparative": "vanligare",
+      "superlative": "vanligast"
     },
     "tags": [
       "everyday"
@@ -13626,5 +13628,1471 @@
       "spoken"
     ],
     "level": 2
+  },
+  {
+    "id": "forvirrad-adjective",
+    "swedish": "förvirrad",
+    "english": [
+      "confused",
+      "bewildered"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "förvirrad",
+      "neuter": "förvirrat",
+      "plural": "förvirrade"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "skulle-verb",
+    "swedish": "skulle",
+    "lemma": "skola",
+    "english": [
+      "would",
+      "should"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "skola",
+      "present": "ska",
+      "past": "skulle",
+      "supine": "skolat"
+    },
+    "note": "Modal auxiliary. 'skola' as an infinitive is archaic/formal; 'ska' and 'skulle' are the forms actually used. No imperative.",
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "darifran-adverb",
+    "swedish": "därifrån",
+    "english": [
+      "from there"
+    ],
+    "pos": "adverb",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "kannas-verb",
+    "swedish": "känns",
+    "lemma": "kännas",
+    "english": [
+      "feels",
+      "seems"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "kännas",
+      "present": "känns",
+      "past": "kändes",
+      "supine": "känts"
+    },
+    "note": "Deponent verb built on 'känna' (to feel/know) — impersonal, about how something feels: 'Det känns bra.' No imperative.",
+    "example": {
+      "sv": "Det känns konstigt.",
+      "en": "It feels strange."
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "passa-verb",
+    "swedish": "passar",
+    "lemma": "passa",
+    "english": [
+      "fits",
+      "suits",
+      "matches"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "passa",
+      "present": "passar",
+      "past": "passade",
+      "supine": "passat",
+      "imperative": "passa",
+      "group": 1
+    },
+    "note": "Also means to look after (passa barnen) or to keep to a schedule (passa tiden = be on time — not the English 'pass the time').",
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "lyxig-adjective",
+    "swedish": "lyxigt",
+    "lemma": "lyxig",
+    "english": [
+      "luxurious",
+      "fancy"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "lyxig",
+      "neuter": "lyxigt",
+      "plural": "lyxiga"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "chilla-verb",
+    "swedish": "chilla",
+    "english": [
+      "chill",
+      "relax",
+      "hang out"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "chilla",
+      "present": "chillar",
+      "past": "chillade",
+      "supine": "chillat",
+      "imperative": "chilla",
+      "group": 1
+    },
+    "note": "Colloquial loanword, conjugates like any group 1 verb.",
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "hyresvard-noun",
+    "swedish": "hyresvärd",
+    "english": [
+      "landlord"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en hyresvärd",
+      "defSg": "hyresvärden",
+      "indefPl": "hyresvärdar",
+      "defPl": "hyresvärdarna"
+    },
+    "tags": [
+      "hem"
+    ],
+    "level": 2
+  },
+  {
+    "id": "formell-adjective",
+    "swedish": "formellt",
+    "lemma": "formell",
+    "english": [
+      "formal"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "formell",
+      "neuter": "formellt",
+      "plural": "formella"
+    },
+    "tags": [
+      "school",
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "in-i-preposition",
+    "swedish": "in i",
+    "english": [
+      "into"
+    ],
+    "pos": "preposition",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "inne-i-preposition",
+    "swedish": "inne i",
+    "english": [
+      "inside",
+      "inside of"
+    ],
+    "pos": "preposition",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "vilja-verb",
+    "swedish": "vill",
+    "lemma": "vilja",
+    "english": [
+      "want",
+      "wants"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "vilja",
+      "present": "vill",
+      "past": "ville",
+      "supine": "velat"
+    },
+    "note": "Modal auxiliary. Irregular, no imperative. 'vilja' as a bare infinitive mostly appears after another modal, as in 'skulle vilja' (would like to).",
+    "example": {
+      "sv": "Jag vill ha kaffe.",
+      "en": "I want (to have) coffee."
+    },
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "kunna-verb",
+    "swedish": "kan",
+    "english": [
+      "can",
+      "be able to",
+      "know how to"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "kunna",
+      "present": "kan",
+      "past": "kunde",
+      "supine": "kunnat"
+    },
+    "note": "Modal auxiliary. Irregular, no imperative.",
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 1,
+    "lemma": "kunna"
+  },
+  {
+    "id": "badkar-noun",
+    "swedish": "badkar",
+    "english": [
+      "bathtub"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett badkar",
+      "defSg": "badkaret",
+      "indefPl": "badkar",
+      "defPl": "badkaren"
+    },
+    "tags": [
+      "hem"
+    ],
+    "level": 2
+  },
+  {
+    "id": "arende-noun",
+    "swedish": "ärende",
+    "english": [
+      "errand",
+      "matter",
+      "task"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett ärende",
+      "defSg": "ärendet",
+      "indefPl": "ärenden",
+      "defPl": "ärendena"
+    },
+    "tags": [
+      "everyday",
+      "stad"
+    ],
+    "level": 2
+  },
+  {
+    "id": "artighetsfras-noun",
+    "swedish": "artighetsfras",
+    "english": [
+      "polite phrase",
+      "courtesy phrase"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en artighetsfras",
+      "defSg": "artighetsfrasen",
+      "indefPl": "artighetsfraser",
+      "defPl": "artighetsfraserna"
+    },
+    "note": "Compound: artighet (politeness) + fras (phrase). Letter-writing vocabulary.",
+    "tags": [
+      "school"
+    ],
+    "level": 3
+  },
+  {
+    "id": "avslutningsfras-noun",
+    "swedish": "avslutningsfras",
+    "english": [
+      "closing phrase"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en avslutningsfras",
+      "defSg": "avslutningsfrasen",
+      "indefPl": "avslutningsfraser",
+      "defPl": "avslutningsfraserna"
+    },
+    "note": "Compound: avslutning (ending/conclusion) + fras (phrase).",
+    "tags": [
+      "school"
+    ],
+    "level": 3
+  },
+  {
+    "id": "tydlig-adjective",
+    "swedish": "tydligt",
+    "lemma": "tydlig",
+    "english": [
+      "clear",
+      "clearly"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "tydlig",
+      "neuter": "tydligt",
+      "plural": "tydliga"
+    },
+    "tags": [
+      "school",
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "innehall-noun",
+    "swedish": "innehållet",
+    "lemma": "innehåll",
+    "english": [
+      "the content",
+      "the contents"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett innehåll",
+      "defSg": "innehållet",
+      "indefPl": "innehåll",
+      "defPl": "innehållen"
+    },
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "kansla-noun",
+    "swedish": "känslor",
+    "lemma": "känsla",
+    "english": [
+      "feelings",
+      "emotions"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en känsla",
+      "defSg": "känslan",
+      "indefPl": "känslor",
+      "defPl": "känslorna"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "kortfattad-adjective",
+    "swedish": "kortfattat",
+    "lemma": "kortfattad",
+    "english": [
+      "briefly",
+      "concisely",
+      "brief"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "kortfattad",
+      "neuter": "kortfattat",
+      "plural": "kortfattade"
+    },
+    "note": "JUDGEMENT CALL: the notes read 'kortfattet', which is not a word; 'kortfattat' (the neuter, used adverbially as in 'Förklara kortfattat') is the form meant.",
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "syfte-noun",
+    "swedish": "syfte",
+    "english": [
+      "purpose",
+      "aim",
+      "objective"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett syfte",
+      "defSg": "syftet",
+      "indefPl": "syften",
+      "defPl": "syftena"
+    },
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "amne-noun",
+    "swedish": "ämne",
+    "english": [
+      "subject",
+      "topic",
+      "substance"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett ämne",
+      "defSg": "ämnet",
+      "indefPl": "ämnen",
+      "defPl": "ämnena"
+    },
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "angaende-preposition",
+    "swedish": "angående",
+    "english": [
+      "regarding",
+      "concerning"
+    ],
+    "pos": "preposition",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "school",
+      "jobb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "dar-inne-adverb",
+    "swedish": "där inne",
+    "english": [
+      "in there"
+    ],
+    "pos": "adverb",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "med-vanlig-halsning-phrase",
+    "swedish": "med vänlig hälsning",
+    "english": [
+      "kind regards",
+      "best regards"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "note": "JUDGEMENT CALL: the notes read 'med vänlig hälsing'; the standard closing is 'hälsning'. Standard letter sign-off.",
+    "tags": [
+      "school",
+      "phrase"
+    ],
+    "level": 2
+  },
+  {
+    "id": "lova-verb",
+    "swedish": "lova",
+    "english": [
+      "promise",
+      "to promise"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "lova",
+      "present": "lovar",
+      "past": "lovade",
+      "supine": "lovat",
+      "imperative": "lova",
+      "group": 1
+    },
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "overraskning-noun",
+    "swedish": "överraskning",
+    "english": [
+      "surprise"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en överraskning",
+      "defSg": "överraskningen",
+      "indefPl": "överraskningar",
+      "defPl": "överraskningarna"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "lantstalle-noun",
+    "swedish": "lantställe",
+    "english": [
+      "country house",
+      "summer house",
+      "cottage"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett lantställe",
+      "defSg": "lantstället",
+      "indefPl": "lantställen",
+      "defPl": "lantställena"
+    },
+    "note": "Compound: land (country) + ställe (place).",
+    "tags": [
+      "everyday",
+      "hem"
+    ],
+    "level": 3
+  },
+  {
+    "id": "installd-adjective",
+    "swedish": "inställt",
+    "lemma": "inställd",
+    "english": [
+      "cancelled",
+      "called off"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "inställd",
+      "neuter": "inställt",
+      "plural": "inställda"
+    },
+    "note": "Past participle of 'ställa in' (to cancel). Homograph: 'inställd' also means 'disposed/minded' (positivt inställd = positively minded) — context decides.",
+    "example": {
+      "sv": "Mötet är inställt.",
+      "en": "The meeting is cancelled."
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "uttrycka-verb",
+    "swedish": "uttrycker",
+    "lemma": "uttrycka",
+    "english": [
+      "expresses",
+      "express"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "uttrycka",
+      "present": "uttrycker",
+      "past": "uttryckte",
+      "supine": "uttryckt",
+      "imperative": "uttryck",
+      "group": 2
+    },
+    "tags": [
+      "school",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "obetonad-adjective",
+    "swedish": "obetonad",
+    "english": [
+      "unstressed"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "obetonad",
+      "neuter": "obetonat",
+      "plural": "obetonade"
+    },
+    "note": "Linguistics term — opposite of 'betonad' (stressed). Describes an unstressed syllable or word.",
+    "tags": [
+      "school"
+    ],
+    "level": 3
+  },
+  {
+    "id": "bisats-noun",
+    "swedish": "bisats",
+    "english": [
+      "subordinate clause"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en bisats",
+      "defSg": "bisatsen",
+      "indefPl": "bisatser",
+      "defPl": "bisatserna"
+    },
+    "tags": [
+      "school"
+    ],
+    "level": 3
+  },
+  {
+    "id": "galen-pa-phrase",
+    "swedish": "galen på",
+    "english": [
+      "furious at",
+      "mad at",
+      "angry with"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "note": "Expresses anger directed at a person — parallel to 'arg på'/'förbannad på'. Not a synonym of 'galen i' (crazy about/infatuated with), which expresses enthusiasm or infatuation rather than anger.",
+    "example": {
+      "sv": "Hon blev galen på honom.",
+      "en": "She got furious with him."
+    },
+    "tags": [
+      "everyday",
+      "phrase"
+    ],
+    "level": 2
+  },
+  {
+    "id": "galen-i-phrase",
+    "swedish": "galen i",
+    "english": [
+      "crazy about",
+      "infatuated with"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "note": "For a person — infatuation, or general enthusiasm for a thing/activity (e.g. 'galen i fotboll' = crazy about football). Compare 'galen på', which expresses anger ('furious at'), not infatuation.",
+    "example": {
+      "sv": "Hon är galen i honom.",
+      "en": "She's crazy about him."
+    },
+    "tags": [
+      "everyday",
+      "phrase"
+    ],
+    "level": 2
+  },
+  {
+    "id": "regel-noun",
+    "swedish": "regler",
+    "lemma": "regel",
+    "english": [
+      "rules"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en regel",
+      "defSg": "regeln",
+      "indefPl": "regler",
+      "defPl": "reglerna"
+    },
+    "tags": [
+      "school",
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "forhalla-sig-verb",
+    "swedish": "förhålla sig",
+    "english": [
+      "relate to",
+      "regard",
+      "to stand (in relation to something)"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "förhålla sig",
+      "present": "förhåller sig",
+      "past": "förhöll sig",
+      "supine": "förhållit sig"
+    },
+    "note": "JUDGEMENT CALL: the notes read 'föhålla', which is not a word; 'förhålla sig (till)' fits the reading-comprehension register of the surrounding notes. Built on 'hålla' (to hold). No imperative.",
+    "tags": [
+      "school"
+    ],
+    "level": 3
+  },
+  {
+    "id": "bero-pa-verb",
+    "swedish": "bero på",
+    "english": [
+      "depend on",
+      "be due to"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "bero på",
+      "present": "beror på",
+      "past": "berodde på",
+      "supine": "berott på",
+      "group": 3
+    },
+    "example": {
+      "sv": "Det beror på vädret.",
+      "en": "It depends on the weather."
+    },
+    "tags": [
+      "school",
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "havda-verb",
+    "swedish": "hävdar",
+    "lemma": "hävda",
+    "english": [
+      "claims",
+      "asserts"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "hävda",
+      "present": "hävdar",
+      "past": "hävdade",
+      "supine": "hävdat",
+      "imperative": "hävda",
+      "group": 1
+    },
+    "tags": [
+      "school",
+      "news",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "avskedsfras-noun",
+    "swedish": "avskedsfras",
+    "english": [
+      "farewell phrase",
+      "parting phrase"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en avskedsfras",
+      "defSg": "avskedsfrasen",
+      "indefPl": "avskedsfraser",
+      "defPl": "avskedsfraserna"
+    },
+    "note": "Compound: avsked (farewell) + fras (phrase).",
+    "tags": [
+      "school"
+    ],
+    "level": 3
+  },
+  {
+    "id": "handla-om-verb",
+    "swedish": "handlar om",
+    "lemma": "handla om",
+    "english": [
+      "is about",
+      "deals with",
+      "concerns"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "handla om",
+      "present": "handlar om",
+      "past": "handlade om",
+      "supine": "handlat om",
+      "imperative": "handla om",
+      "group": 1
+    },
+    "note": "JUDGEMENT CALL: the notes read 'handler om'; 'handlar' is the present tense of 'handla'.",
+    "example": {
+      "sv": "Boken handlar om kärlek.",
+      "en": "The book is about love."
+    },
+    "tags": [
+      "school",
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "klimat-noun",
+    "swedish": "klimat",
+    "english": [
+      "climate"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett klimat",
+      "defSg": "klimatet",
+      "indefPl": "klimat",
+      "defPl": "klimaten"
+    },
+    "note": "JUDGEMENT CALL: the notes read 'kilmat', which is not a word; the surrounding notes (miljö, ansvar, drabbas, överleva) are all climate vocabulary, so 'klimat' is clearly meant.",
+    "tags": [
+      "news",
+      "natur"
+    ],
+    "level": 1
+  },
+  {
+    "id": "miljo-noun",
+    "swedish": "miljö",
+    "english": [
+      "environment"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en miljö",
+      "defSg": "miljön",
+      "indefPl": "miljöer",
+      "defPl": "miljöerna"
+    },
+    "tags": [
+      "news",
+      "natur"
+    ],
+    "level": 1
+  },
+  {
+    "id": "ansvar-noun",
+    "swedish": "ansvar",
+    "english": [
+      "responsibility"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett ansvar",
+      "defSg": "ansvaret",
+      "indefPl": "ansvar",
+      "defPl": "ansvaren"
+    },
+    "tags": [
+      "news",
+      "jobb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "bevisa-verb",
+    "swedish": "har bevisat",
+    "lemma": "bevisa",
+    "english": [
+      "has proven",
+      "has shown"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "bevisa",
+      "present": "bevisar",
+      "past": "bevisade",
+      "supine": "bevisat",
+      "imperative": "bevisa",
+      "group": 1
+    },
+    "note": "Perfect tense: 'har' plus the supine 'bevisat'.",
+    "tags": [
+      "news",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "paverka-verb",
+    "swedish": "påverkar",
+    "lemma": "påverka",
+    "english": [
+      "affects",
+      "influences"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "påverka",
+      "present": "påverkar",
+      "past": "påverkade",
+      "supine": "påverkat",
+      "imperative": "påverka",
+      "group": 1
+    },
+    "tags": [
+      "news",
+      "natur",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "drabbas-verb",
+    "swedish": "drabbas",
+    "english": [
+      "be affected",
+      "be hit by",
+      "be struck by"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "drabbas",
+      "present": "drabbas",
+      "past": "drabbades",
+      "supine": "drabbats",
+      "group": 1
+    },
+    "note": "The s-passive of 'drabba' (to strike/hit) — always about something bad happening to someone. Not a true deponent verb; 'drabba' exists as an ordinary active verb.",
+    "tags": [
+      "news",
+      "natur",
+      "verb"
+    ],
+    "level": 3
+  },
+  {
+    "id": "overleva-verb",
+    "swedish": "överleva",
+    "english": [
+      "survive",
+      "to survive"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "överleva",
+      "present": "överlever",
+      "past": "överlevde",
+      "supine": "överlevt",
+      "imperative": "överlev",
+      "group": 2
+    },
+    "tags": [
+      "news",
+      "natur",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "bara-verb",
+    "swedish": "bär",
+    "lemma": "bära",
+    "english": [
+      "carries",
+      "bears"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "bära",
+      "present": "bär",
+      "past": "bar",
+      "supine": "burit",
+      "imperative": "bär",
+      "group": 4
+    },
+    "note": "Strong verb. Often figurative — 'bär ansvar' = bears responsibility.",
+    "tags": [
+      "news",
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "forandra-verb",
+    "swedish": "förändra",
+    "english": [
+      "change",
+      "transform",
+      "alter"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "förändra",
+      "present": "förändrar",
+      "past": "förändrade",
+      "supine": "förändrat",
+      "imperative": "förändra",
+      "group": 1
+    },
+    "tags": [
+      "news",
+      "natur",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "forstora-verb",
+    "swedish": "förstör",
+    "lemma": "förstöra",
+    "english": [
+      "destroys",
+      "ruins"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "förstöra",
+      "present": "förstör",
+      "past": "förstörde",
+      "supine": "förstört",
+      "imperative": "förstör",
+      "group": 2
+    },
+    "tags": [
+      "news",
+      "natur",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "gora-bort-sig-phrase",
+    "swedish": "att göra bort sig",
+    "english": [
+      "to embarrass oneself",
+      "to make a fool of oneself"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday",
+      "phrase"
+    ],
+    "level": 3
+  },
+  {
+    "id": "sig-sjalv-pronoun",
+    "swedish": "sig själv",
+    "english": [
+      "oneself",
+      "himself",
+      "herself",
+      "itself"
+    ],
+    "pos": "pronoun",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "verka-dum-phrase",
+    "swedish": "att verka dum",
+    "english": [
+      "to seem stupid",
+      "to come across as stupid"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday",
+      "phrase"
+    ],
+    "level": 2
+  },
+  {
+    "id": "ga-in-i-verb",
+    "swedish": "gå in i",
+    "english": [
+      "walk into",
+      "bump into",
+      "go into"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "gå in i",
+      "present": "går in i",
+      "past": "gick in i",
+      "supine": "gått in i",
+      "imperative": "gå in i"
+    },
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "krocka-verb",
+    "swedish": "krocka",
+    "english": [
+      "crash",
+      "collide"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "krocka",
+      "present": "krockar",
+      "past": "krockade",
+      "supine": "krockat",
+      "imperative": "krocka",
+      "group": 1
+    },
+    "tags": [
+      "everyday",
+      "resa",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "ga-av-verb",
+    "swedish": "gå av",
+    "english": [
+      "come off",
+      "break off",
+      "get off (a vehicle)"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "gå av",
+      "present": "går av",
+      "past": "gick av",
+      "supine": "gått av",
+      "imperative": "gå av"
+    },
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "ga-over-verb",
+    "swedish": "gå över",
+    "english": [
+      "pass",
+      "go away",
+      "blow over"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "gå över",
+      "present": "går över",
+      "past": "gick över",
+      "supine": "gått över",
+      "imperative": "gå över"
+    },
+    "note": "Of pain, a feeling, or weather — 'Det går över.' = It'll pass.",
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "forsvinna-verb",
+    "swedish": "försvinna",
+    "english": [
+      "disappear"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "försvinna",
+      "present": "försvinner",
+      "past": "försvann",
+      "supine": "försvunnit",
+      "imperative": "försvinn",
+      "group": 4
+    },
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "ga-ihop-verb",
+    "swedish": "gå ihop",
+    "english": [
+      "add up",
+      "work out",
+      "come together"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "gå ihop",
+      "present": "går ihop",
+      "past": "gick ihop",
+      "supine": "gått ihop",
+      "imperative": "gå ihop"
+    },
+    "note": "Of numbers, plans, or budgets working out.",
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "gora-upp-verb",
+    "swedish": "göra upp",
+    "english": [
+      "settle",
+      "sort out",
+      "come to an agreement"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "göra upp",
+      "present": "gör upp",
+      "past": "gjorde upp",
+      "supine": "gjort upp",
+      "imperative": "gör upp"
+    },
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "lasforstaelse-noun",
+    "swedish": "läsförståelse",
+    "english": [
+      "reading comprehension"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en läsförståelse",
+      "defSg": "läsförståelsen",
+      "indefPl": "läsförståelser",
+      "defPl": "läsförståelserna"
+    },
+    "note": "Usually used in the singular only.",
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "haromdagen-adverb",
+    "swedish": "häromdagen",
+    "english": [
+      "the other day"
+    ],
+    "pos": "adverb",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "stamma-verb",
+    "swedish": "stämmer",
+    "lemma": "stämma",
+    "english": [
+      "is correct",
+      "matches",
+      "checks out"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "stämma",
+      "present": "stämmer",
+      "past": "stämde",
+      "supine": "stämt",
+      "imperative": "stämm",
+      "group": 2
+    },
+    "tags": [
+      "school",
+      "everyday",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "stammer-det-phrase",
+    "swedish": "stämmer det",
+    "english": [
+      "is that right?",
+      "is that correct?"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "school",
+      "everyday",
+      "phrase"
+    ],
+    "level": 1
+  },
+  {
+    "id": "vilka-olika-satt-phrase",
+    "swedish": "vilka olika sätt",
+    "english": [
+      "which different ways"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "note": "Essay-question register: 'på vilka olika sätt...' = in which different ways...",
+    "tags": [
+      "school",
+      "phrase"
+    ],
+    "level": 2
+  },
+  {
+    "id": "forklara-verb",
+    "swedish": "förklara",
+    "english": [
+      "explain"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "förklara",
+      "present": "förklarar",
+      "past": "förklarade",
+      "supine": "förklarat",
+      "imperative": "förklara",
+      "group": 1
+    },
+    "tags": [
+      "school",
+      "everyday",
+      "verb"
+    ],
+    "level": 1
   }
 ]

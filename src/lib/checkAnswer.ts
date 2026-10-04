@@ -13,7 +13,8 @@ export interface AnswerVerdict {
   reason?: 'exact' | 'alternate' | 'fuzzy' | 'substring' | 'folded';
 }
 
-const MIN_FUZZY_LENGTH = 4;
+/** Below this, fuzzy matching is off: a one-letter edit of a short word is often a different word entirely. */
+export const MIN_FUZZY_LENGTH = 4;
 const LONG_INPUT_LENGTH = 8;
 
 /** Fuzzy tolerance: one typo in a short word, two in a long one. */
