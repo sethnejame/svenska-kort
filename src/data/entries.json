@@ -9618,7 +9618,9 @@
       "kind": "adjective",
       "base": "varm",
       "neuter": "varmt",
-      "plural": "varma"
+      "plural": "varma",
+      "comparative": "varmare",
+      "superlative": "varmast"
     },
     "tags": [
       "natur",
@@ -15094,5 +15096,629 @@
       "verb"
     ],
     "level": 1
+  },
+  {
+    "id": "ha-brattom-phrase",
+    "swedish": "ha bråttom",
+    "english": [
+      "to be in a hurry",
+      "be in a hurry"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday",
+      "phrase"
+    ],
+    "level": 2
+  },
+  {
+    "id": "viss-adjective",
+    "swedish": "viss",
+    "english": [
+      "certain",
+      "some"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "viss",
+      "neuter": "visst",
+      "plural": "vissa"
+    },
+    "note": "The plural 'vissa' is the form most often seen — 'vissa människor' (certain/some people).",
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "slappna-av-verb",
+    "swedish": "slappna av",
+    "english": [
+      "relax"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "slappna av",
+      "present": "slappnar av",
+      "past": "slappnade av",
+      "supine": "slappnat av",
+      "imperative": "slappna av",
+      "group": 1
+    },
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "ta-en-paus-phrase",
+    "swedish": "ta en paus",
+    "english": [
+      "take a break"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday",
+      "phrase"
+    ],
+    "level": 1
+  },
+  {
+    "id": "lugna-ner-sig-verb",
+    "swedish": "lugna ner sig",
+    "english": [
+      "calm down"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "lugna ner sig",
+      "present": "lugnar ner sig",
+      "past": "lugnade ner sig",
+      "supine": "lugnat ner sig",
+      "group": 1
+    },
+    "note": "No imperative listed — the reflexive imperative swaps 'sig' for 'dig' ('lugna ner dig'), a separate form.",
+    "tags": [
+      "everyday",
+      "verb"
+    ],
+    "level": 2
+  },
+  {
+    "id": "ovantad-adjective",
+    "swedish": "oväntad",
+    "english": [
+      "unexpected"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "oväntad",
+      "neuter": "oväntat",
+      "plural": "oväntade"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "andas-djupt-verb",
+    "swedish": "andas djupt",
+    "english": [
+      "breathe deeply"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "andas djupt",
+      "present": "andas djupt",
+      "past": "andades djupt",
+      "supine": "andats djupt"
+    },
+    "note": "'andas' is a deponent verb — it ends in -s in every form, including the infinitive.",
+    "tags": [
+      "kropp",
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "niva-noun",
+    "swedish": "nivå",
+    "english": [
+      "level"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en nivå",
+      "defSg": "nivån",
+      "indefPl": "nivåer",
+      "defPl": "nivåerna"
+    },
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "tidsgrans-noun",
+    "swedish": "tidsgräns",
+    "english": [
+      "time limit",
+      "deadline"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en tidsgräns",
+      "defSg": "tidsgränsen",
+      "indefPl": "tidsgränser",
+      "defPl": "tidsgränserna"
+    },
+    "note": "Spelled with a linking -s-: 'tidsgräns', not 'tidgräns'.",
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "jamfora-verb",
+    "swedish": "jämföra",
+    "english": [
+      "compare"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "jämföra",
+      "present": "jämför",
+      "past": "jämförde",
+      "supine": "jämfört",
+      "imperative": "jämför",
+      "group": 2
+    },
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "horforstaelse-noun",
+    "swedish": "hörförståelse",
+    "english": [
+      "listening comprehension"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en hörförståelse",
+      "defSg": "hörförståelsen",
+      "indefPl": "hörförståelser",
+      "defPl": "hörförståelserna"
+    },
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "noga-adverb",
+    "swedish": "noga",
+    "english": [
+      "carefully",
+      "thoroughly"
+    ],
+    "pos": "adverb",
+    "forms": {
+      "kind": "none"
+    },
+    "note": "Also works as an invariant adjective — 'han är noga' (he's particular/careful).",
+    "tags": [
+      "school",
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "samaka-verb",
+    "swedish": "samåka",
+    "english": [
+      "carpool",
+      "share a ride"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "samåka",
+      "present": "samåker",
+      "past": "samåkte",
+      "supine": "samåkt",
+      "imperative": "samåk",
+      "group": 2
+    },
+    "tags": [
+      "resa"
+    ],
+    "level": 2
+  },
+  {
+    "id": "en-stund-varje-kvall-phrase",
+    "swedish": "en stund varje kväll",
+    "english": [
+      "a while every evening"
+    ],
+    "pos": "phrase",
+    "forms": {
+      "kind": "none"
+    },
+    "tags": [
+      "everyday",
+      "phrase"
+    ],
+    "level": 2
+  },
+  {
+    "id": "stalle-noun",
+    "swedish": "ställe",
+    "english": [
+      "place",
+      "spot"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett ställe",
+      "defSg": "stället",
+      "indefPl": "ställen",
+      "defPl": "ställena"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "samhalle-noun",
+    "swedish": "samhälle",
+    "english": [
+      "society",
+      "community"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett samhälle",
+      "defSg": "samhället",
+      "indefPl": "samhällen",
+      "defPl": "samhällena"
+    },
+    "tags": [
+      "news"
+    ],
+    "level": 2
+  },
+  {
+    "id": "jord-noun",
+    "swedish": "jord",
+    "english": [
+      "earth",
+      "soil",
+      "ground"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en jord",
+      "defSg": "jorden",
+      "indefPl": "jordar",
+      "defPl": "jordarna"
+    },
+    "tags": [
+      "natur"
+    ],
+    "level": 2
+  },
+  {
+    "id": "klimatforskare-noun",
+    "swedish": "klimatforskare",
+    "english": [
+      "climate scientist",
+      "climate researcher"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en klimatforskare",
+      "defSg": "klimatforskaren",
+      "indefPl": "klimatforskare",
+      "defPl": "klimatforskarna"
+    },
+    "tags": [
+      "news",
+      "natur"
+    ],
+    "level": 2
+  },
+  {
+    "id": "vaxt-noun",
+    "swedish": "växt",
+    "english": [
+      "plant"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en växt",
+      "defSg": "växten",
+      "indefPl": "växter",
+      "defPl": "växterna"
+    },
+    "tags": [
+      "natur"
+    ],
+    "level": 1
+  },
+  {
+    "id": "vaxa-verb",
+    "swedish": "växa",
+    "english": [
+      "grow"
+    ],
+    "pos": "verb",
+    "forms": {
+      "kind": "verb",
+      "infinitive": "växa",
+      "present": "växer",
+      "past": "växte",
+      "supine": "växt",
+      "imperative": "väx",
+      "group": 2
+    },
+    "tags": [
+      "natur",
+      "verb"
+    ],
+    "level": 1
+  },
+  {
+    "id": "natur-noun",
+    "swedish": "natur",
+    "english": [
+      "nature"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en natur",
+      "defSg": "naturen",
+      "indefPl": "naturer",
+      "defPl": "naturerna"
+    },
+    "tags": [
+      "natur"
+    ],
+    "level": 1
+  },
+  {
+    "id": "hansyn-noun",
+    "swedish": "hänsyn",
+    "english": [
+      "consideration",
+      "respect"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en hänsyn",
+      "defSg": "hänsynen",
+      "indefPl": "hänsyn",
+      "defPl": "hänsynen"
+    },
+    "note": "Rarely pluralized — 'ta hänsyn till' (take into consideration) stays singular in practice.",
+    "tags": [
+      "news"
+    ],
+    "level": 2
+  },
+  {
+    "id": "jordklot-noun",
+    "swedish": "jordklot",
+    "english": [
+      "globe",
+      "earth (the planet)"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "ett",
+      "indefSg": "ett jordklot",
+      "defSg": "jordklotet",
+      "indefPl": "jordklot",
+      "defPl": "jordkloten"
+    },
+    "tags": [
+      "natur"
+    ],
+    "level": 2
+  },
+  {
+    "id": "roll-noun",
+    "swedish": "roll",
+    "english": [
+      "role",
+      "part"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en roll",
+      "defSg": "rollen",
+      "indefPl": "roller",
+      "defPl": "rollerna"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "forandring-noun",
+    "swedish": "förändring",
+    "english": [
+      "change"
+    ],
+    "pos": "noun",
+    "forms": {
+      "kind": "noun",
+      "gender": "en",
+      "indefSg": "en förändring",
+      "defSg": "förändringen",
+      "indefPl": "förändringar",
+      "defPl": "förändringarna"
+    },
+    "tags": [
+      "news",
+      "everyday"
+    ],
+    "level": 2
+  },
+  {
+    "id": "obestamd-adjective",
+    "swedish": "obestämd",
+    "english": [
+      "indefinite"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "obestämd",
+      "neuter": "obestämt",
+      "plural": "obestämda"
+    },
+    "note": "Grammar term — 'obestämd artikel' (indefinite article), 'obestämd form' (indefinite form).",
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "bestamd-adjective",
+    "swedish": "bestämd",
+    "english": [
+      "definite"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "bestämd",
+      "neuter": "bestämt",
+      "plural": "bestämda"
+    },
+    "note": "Grammar term pairing with 'obestämd' — 'bestämd form' (definite form). Also means 'determined/decided' outside grammar.",
+    "tags": [
+      "school"
+    ],
+    "level": 2
+  },
+  {
+    "id": "gift-adjective",
+    "swedish": "gift",
+    "english": [
+      "married"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "gift",
+      "neuter": "gift",
+      "plural": "gifta"
+    },
+    "tags": [
+      "familj"
+    ],
+    "level": 1
+  },
+  {
+    "id": "svar-adjective",
+    "swedish": "svår",
+    "english": [
+      "difficult",
+      "hard"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "svår",
+      "neuter": "svårt",
+      "plural": "svåra",
+      "comparative": "svårare",
+      "superlative": "svårast"
+    },
+    "tags": [
+      "school",
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "fri-adjective",
+    "swedish": "fri",
+    "english": [
+      "free"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "fri",
+      "neuter": "fritt",
+      "plural": "fria"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 1
+  },
+  {
+    "id": "enskild-adjective",
+    "swedish": "enskild",
+    "english": [
+      "individual",
+      "separate",
+      "private"
+    ],
+    "pos": "adjective",
+    "forms": {
+      "kind": "adjective",
+      "base": "enskild",
+      "neuter": "enskilt",
+      "plural": "enskilda"
+    },
+    "tags": [
+      "everyday"
+    ],
+    "level": 2
   }
 ]
