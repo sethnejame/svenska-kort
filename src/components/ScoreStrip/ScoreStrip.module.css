@@ -6,6 +6,27 @@
   padding: var(--space-4);
 }
 
+.back {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin: calc(-1 * var(--space-2)) 0 0 calc(-1 * var(--space-2));
+  border-radius: var(--r-pill);
+  color: var(--c-ink-soft);
+}
+
+.back:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.back:active {
+  color: var(--c-primary);
+}
+
 .deckName {
   flex: 1 1 auto;
   min-width: 0;

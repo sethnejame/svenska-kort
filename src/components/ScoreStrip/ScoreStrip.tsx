@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { cx } from '../../utils/cx';
 import styles from './ScoreStrip.module.css';
 
@@ -28,6 +29,24 @@ function Flame({ size }: { size: number }) {
   );
 }
 
+function BackIcon() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12.5 4.5 7 10l5.5 5.5" />
+    </svg>
+  );
+}
+
 export function ScoreStrip({ deckName, streak, sessionScore, bestStreakEver }: ScoreStripProps) {
   const previous = useRef(streak);
   const [bump, setBump] = useState(false);
@@ -40,6 +59,10 @@ export function ScoreStrip({ deckName, streak, sessionScore, bestStreakEver }: S
 
   return (
     <header className={styles.strip}>
+      <Link to="/decks" className={styles.back} aria-label="Avsluta leken">
+        <BackIcon />
+      </Link>
+
       <span className={styles.deckName} lang="sv">
         {deckName}
       </span>

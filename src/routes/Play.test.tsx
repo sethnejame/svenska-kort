@@ -82,7 +82,9 @@ describe('Play', () => {
     renderPlay();
     showCard('minska-verb');
 
-    // Tab order follows the visual order: the card first, then the input.
+    // Tab order follows the visual order: the exit link, then the card, then the input.
+    await user.tab();
+    expect(screen.getByRole('link', { name: 'Avsluta leken' })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole('button', { name: /minskade/ })).toHaveFocus();
     await user.tab();
@@ -155,6 +157,8 @@ describe('Play', () => {
     renderPlay();
     showCard('minska-verb');
 
+    // The first tab stop is the exit link, so the card needs a second tab.
+    await user.tab();
     await user.tab();
     await user.keyboard(' ');
     expect(useGameStore.getState().flipped).toBe(true);
