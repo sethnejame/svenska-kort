@@ -11,11 +11,12 @@ test('plays a deck with the network switched off', async ({ page, context }) => 
   await expect(page.getByRole('heading', { name: 'Välj en lek' })).toBeVisible();
 
   // The worker claims the page asynchronously; without this the reload below
-  // would race it and legitimately fail.
-  await page.waitForFunction(async () => {
-    const registration = await navigator.serviceWorker.getRegistration();
-    return registration?.active?.state === 'activated';
-  });
+  // would race it and legitimately fail. `registration.active.state` can read
+  // 'activated' a tick before this page's own `controller` is set — they cross
+  // the SW/page IPC boundary separately — and it is `controller` that actually
+  // decides whether a later fetch (the lazy leaderboard chunk, below) is
+  // intercepted rather than sent to the now-offline network.
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
 
   await context.setOffline(true);
 
